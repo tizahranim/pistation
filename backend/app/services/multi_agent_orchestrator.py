@@ -558,51 +558,13 @@ INSTRUCTIONS:
             yield {"type": "stance", "agent_id": agent["id"], "stance": agent_turn_record["stance"]}
             yield {"type": "agent_turn_end", "agent_id": agent["id"], "full_content": stance["clean"]}
 
-            # If discussion already had a synthesis or intervention directs the leader, re-synthesize updated verdict
-            had_summary = bool(disc.get("summary"))
-            if had_summary or is_leader:
-                leader_agent = None
-                if is_leader:
-                    leader_agent = agent
-                elif disc.get("leader_id"):
-                    cursor = await db.execute("SELECT * FROM agents WHERE id = ?;", (disc["leader_id"],))
-                    lrow = await cursor.fetchone()
-                    if lrow:
-                        leader_agent = dict(lrow)
-                if not leader_agent:
-                    leader_agent = agent
-
-                yield {"type": "synthesis_start"}
-                synth_prompt = f"""You are {leader_agent['name']}, Executive Moderator and Lead Synthesizer.
-Review the complete updated debate transcript, including the Human Supervisor's recent guidance:
-"{human_message}"
-
-Synthesize an updated, structured Executive Consensus Verdict & Action Plan that incorporates the supervisor's new direction and instructions."""
-
-                synth_messages = [{"role": "system", "content": synth_prompt}]
-                if doc_context:
-                    synth_messages.append({"role": "system", "content": doc_context})
-                for t in transcript:
-                    speaker = t.get("speaker") or t.get("agent_name") or "Participant"
-                    synth_messages.append({"role": "user" if t.get("is_human") else "assistant", "content": f"[{speaker}]: {t['content']}"})
-
-                updated_summary = ""
-                async for chunk in LLMRouter.chat_stream(
-                    model=leader_agent["model_id"],
-                    messages=synth_messages,
-                    system_prompt=synth_prompt,
-                    provider=leader_agent.get("model_provider", "ollama"),
-                    temperature=0.2
-                ):
-                    if chunk.get("content"):
-                        updated_summary += chunk["content"]
-                        yield {"type": "synthesis_token", "content": chunk["content"]}
-
+            # If the leader responded or if the debate was already completed, update the executive summary
+            updated_summary = stance["clean"]
+            if is_leader or disc.get("summary"):
                 await db.execute("""
                 UPDATE discussions SET summary = ?, status = 'completed' WHERE id = ?;
                 """, (updated_summary, discussion_id))
                 await db.commit()
-
                 score, disagreements = compute_consensus(transcript)
                 yield {"type": "consensus_update", "score": score}
                 yield {"type": "complete", "discussion_id": discussion_id, "summary": updated_summary, "transcript": transcript}

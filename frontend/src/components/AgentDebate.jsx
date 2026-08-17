@@ -896,15 +896,16 @@ export default function AgentDebate({
                 const fin = { ...replyObj };
                 setStreamTurns(prev => [...prev, fin]);
                 queueVoicePlayback(fin.content, voiceMap[fin.agent_id] || 'en-US-JennyNeural', fin.id, fin.agent_id);
+
+                // If this is the leader or target is leader, automatically update Executive Summary with the revised output
+                const isLeaderTurn = fin.agent_id === leaderId || targetInterventionAgentId === 'leader' || !leaderId;
+                if (isLeaderTurn && fin.content) {
+                  setFinalSynthesis(fin.content);
+                }
+
                 setCurrentTurn(null);
                 replyObj = null;
                 setActiveSpeakerId(null);
-              } else if (event.type === 'synthesis_start') {
-                setCurrentPhase('synthesis');
-                setActiveSpeakerId(leaderId || selectedAgentIds[0]);
-                setFinalSynthesis('');
-              } else if (event.type === 'synthesis_token') {
-                setFinalSynthesis(prev => prev + event.content);
               } else if (event.type === 'consensus_update') {
                 if (typeof event.score === 'number') {
                   setConsensusScore(event.score);
@@ -1711,7 +1712,7 @@ export default function AgentDebate({
                       </div>
                       <div>
                         <h3 className="font-bold text-sm text-white font-mono flex items-center gap-2">
-                          <span>Executive Consensus Verdict & Action Plan</span>
+                          <span>Executive Summary</span>
                           <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono border border-emerald-500/30">
                             Consensus: {consensusScore}%
                           </span>
