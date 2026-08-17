@@ -717,36 +717,21 @@ export default function Overview({
               {/* Dynamic Internal Disks & Connected USB Drives */}
               {(telemetry?.disks || [
                 {
-                  id: 'linux_ssd',
-                  name: 'Linux SSD (512GB)',
-                  short_name: 'Linux SSD (512GB)',
-                  device: '/dev/sda3',
+                  id: 'primary_disk',
+                  name: 'Primary System Drive',
+                  short_name: 'System Drive',
+                  device: 'local',
                   mount: '/',
-                  role: 'System & AI Workspace',
-                  used_gb: 103.9,
-                  total_gb: 474.4,
-                  free_gb: 369.1,
-                  percent: 22.0,
-                  status: '369GB Free',
-                  is_usb: false
-                },
-                {
-                  id: 'windows_nvme',
-                  name: 'Windows NVMe (1TB)',
-                  short_name: 'Windows NVMe (1TB)',
-                  device: '/dev/nvme0n1p2',
-                  mount: 'Dedicated Partition (NTFS)',
-                  role: 'Dedicated NTFS Drive',
-                  used_gb: 390.9,
-                  total_gb: 930.7,
-                  free_gb: 539.8,
-                  percent: 42.0,
-                  status: 'Windows Drive',
+                  role: 'Operating System & Workspace',
+                  used_gb: 0,
+                  total_gb: 0,
+                  free_gb: 0,
+                  percent: 0,
+                  status: 'Loading telemetry...',
                   is_usb: false
                 }
               ]).map((d) => {
                 const isUsb = d.is_usb;
-                const isWin = d.id === 'windows_nvme';
                 return (
                   <div
                     key={d.id}
@@ -759,18 +744,16 @@ export default function Overview({
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5 font-mono text-xs font-bold text-gray-200 truncate">
                         <HardDrive className={`w-3.5 h-3.5 shrink-0 ${
-                          isUsb ? 'text-amber-400 animate-pulse' : isWin ? 'text-indigo-400' : 'text-cyan-400'
+                          isUsb ? 'text-amber-400 animate-pulse' : 'text-cyan-400'
                         }`} />
                         <span className="truncate">{d.short_name || d.name}</span>
                       </div>
                       <span className={`text-[9px] font-mono px-1.5 py-0.2 rounded border shrink-0 ${
                         isUsb
                           ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                          : isWin
-                          ? 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30'
                           : 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30'
                       }`}>
-                        {isUsb ? '⚡ USB Drive' : isWin ? 'Windows Drive' : `${d.free_gb}GB Free`}
+                        {isUsb ? '⚡ USB Drive' : `${d.free_gb}GB Free`}
                       </span>
                     </div>
 
@@ -778,7 +761,7 @@ export default function Overview({
                       <div className="flex items-center justify-between text-[10px] font-mono text-gray-400 truncate">
                         <span className="truncate">{d.role || d.mount || 'Storage'}</span>
                         <span className={`font-bold shrink-0 ml-1 ${
-                          isUsb ? 'text-amber-300' : isWin ? 'text-indigo-300' : 'text-cyan-300'
+                          isUsb ? 'text-amber-300' : 'text-cyan-300'
                         }`}>
                           {d.used_gb != null ? `${d.used_gb} / ${d.total_gb} GB` : `${d.total_gb} GB`}
                         </span>
@@ -788,8 +771,6 @@ export default function Overview({
                           className={`h-full rounded-full transition-all duration-300 ${
                             isUsb
                               ? 'bg-gradient-to-r from-amber-500 to-yellow-400'
-                              : isWin
-                              ? 'bg-gradient-to-r from-indigo-500 to-pink-500'
                               : 'bg-gradient-to-r from-cyan-500 to-blue-500'
                           }`}
                           style={{ width: `${Math.min(100, Math.max(5, d.percent ?? 20))}%` }}

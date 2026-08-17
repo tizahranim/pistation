@@ -620,38 +620,22 @@ export default function ResourceMonitor({ agents = [], activeModel }) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {(data?.disks || [
                   {
-                    id: 'linux_ssd',
-                    name: 'Linux OS & Workspace (PLEXTOR 512GB)',
-                    short_name: 'Linux SSD (PLEXTOR)',
-                    device: '/dev/sda3',
+                    id: 'primary_disk',
+                    name: 'Primary System Drive',
+                    short_name: 'System Drive',
+                    device: 'local',
                     mount: '/',
-                    fs_type: 'btrfs',
-                    type: 'SATA/PCIe SSD',
-                    role: 'Linux System & AI Control Center',
-                    total_gb: 474.4,
-                    used_gb: 103.9,
-                    free_gb: 369.1,
-                    percent: 22.0,
-                    status: 'Online • Active'
-                  },
-                  {
-                    id: 'windows_nvme',
-                    name: 'Windows Dedicated NVMe (KINGSTON 1TB)',
-                    short_name: 'Windows NVMe (KINGSTON)',
-                    device: '/dev/nvme0n1p2',
-                    mount: 'Dedicated Partition (NTFS)',
-                    fs_type: 'ntfs',
-                    type: 'NVMe PCIe Gen4',
-                    role: 'Windows OS & Primary Storage',
-                    total_gb: 930.7,
-                    used_gb: 390.9,
-                    free_gb: 539.8,
-                    percent: 42.0,
-                    status: 'Dedicated Windows Drive'
+                    fs_type: '—',
+                    type: 'System SSD',
+                    role: 'Operating System & Workspace',
+                    total_gb: 0,
+                    used_gb: 0,
+                    free_gb: 0,
+                    percent: 0,
+                    status: 'Loading telemetry...'
                   }
                 ]).map((d, idx) => {
                   const isUsb = d.is_usb;
-                  const isWin = d.id === 'windows_nvme';
                   return (
                     <div
                       key={d.id || idx}
@@ -664,7 +648,7 @@ export default function ResourceMonitor({ agents = [], activeModel }) {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 truncate">
                           <HardDrive className={`w-4 h-4 shrink-0 ${
-                            isUsb ? 'text-amber-400 animate-pulse' : isWin ? 'text-indigo-400' : 'text-cyan-400'
+                            isUsb ? 'text-amber-400 animate-pulse' : 'text-cyan-400'
                           }`} />
                           <div className="truncate">
                             <div className="font-bold text-xs text-gray-200 truncate">{d.name}</div>
@@ -674,8 +658,6 @@ export default function ResourceMonitor({ agents = [], activeModel }) {
                         <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded border shrink-0 ${
                           isUsb
                             ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                            : isWin
-                            ? 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30'
                             : 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30'
                         }`}>
                           {d.status || `${d.percent}% Used`}
@@ -687,8 +669,6 @@ export default function ResourceMonitor({ agents = [], activeModel }) {
                           className={`h-full rounded-full transition-all duration-300 ${
                             isUsb
                               ? 'bg-gradient-to-r from-amber-500 to-yellow-400'
-                              : isWin
-                              ? 'bg-gradient-to-r from-indigo-500 to-pink-500'
                               : 'bg-gradient-to-r from-cyan-500 to-blue-500'
                           }`}
                           style={{ width: `${Math.min(100, Math.max(5, d.percent ?? 20))}%` }}
@@ -697,7 +677,7 @@ export default function ResourceMonitor({ agents = [], activeModel }) {
 
                       <div className="flex items-center justify-between text-[10px] font-mono text-gray-400">
                         <span>Used: <strong className="text-gray-200">{d.used_gb} GB</strong> ({d.percent}%)</span>
-                        <span>Free: <strong className={isUsb ? 'text-amber-300' : isWin ? 'text-indigo-300' : 'text-cyan-300'}>{d.free_gb} GB</strong> / {d.total_gb} GB</span>
+                        <span>Free: <strong className={isUsb ? 'text-amber-300' : 'text-cyan-300'}>{d.free_gb} GB</strong> / {d.total_gb} GB</span>
                       </div>
 
                       {/* Action Buttons: Explore & Eject */}
