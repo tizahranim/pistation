@@ -587,11 +587,11 @@ export default function ChatWorkspace({
             <div>
               <h3 className="text-base font-semibold text-gray-100">{activeAgent?.name || 'Pi Agent'}</h3>
               <p className="text-xs text-gray-400 mt-1 leading-relaxed">
-                {activeAgent?.role || 'Autonomous coding and research specialist'}
+                {getLocalizedRole(activeAgent?.role)}
               </p>
               <div className="mt-3 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-card-border/50 text-[11px] font-mono text-gray-300 border border-card-border">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                <span>Engine: {activeModel?.model || activeAgent?.model_id}</span>
+                <span>{isRTL ? 'المحرك:' : 'Engine:'} {activeModel?.model || activeAgent?.model_id}</span>
                 <span className="text-gray-500">({activeModel?.provider || 'ollama'})</span>
               </div>
             </div>
@@ -612,19 +612,24 @@ export default function ChatWorkspace({
 
             {/* Starter Suggestions */}
             <div className="grid grid-cols-2 gap-2 w-full pt-2 text-left">
-              {[
-                "Check my download directory",
+              {(isRTL ? [
+                "فحص أمان الكود البرمجي والأداء",
+                "فحص مجلد التنزيلات والمستندات",
+                "تصميم معمارية نظام برمجية متكاملة",
+                "استخلاص الرؤى والتحليلات من الملفات"
+              ] : [
                 "Audit code security & performance",
-                "Synthesize insights from uploaded files",
-                "Design a full-stack system architecture"
-              ].map((s, idx) => (
+                "Check my download directory",
+                "Design a full-stack system architecture",
+                "Synthesize insights from uploaded files"
+              ]).map((s, idx) => (
                 <button
                   key={idx}
                   onClick={() => {
                     setInputPrompt(s);
                     inputRef.current?.focus();
                   }}
-                  className="p-2.5 rounded-lg bg-card/60 hover:bg-card border border-card-border/80 text-xs text-gray-300 hover:text-emerald-300 transition-all hover:border-emerald-500/30 text-left"
+                  className={`p-2.5 rounded-lg bg-card/60 hover:bg-card border border-card-border/80 text-xs text-gray-300 hover:text-emerald-300 transition-all hover:border-emerald-500/30 ${isRTL ? 'text-right' : 'text-left'}`}
                 >
                   {s}
                 </button>
@@ -916,7 +921,7 @@ export default function ChatWorkspace({
                   title={(isListening || isMediaRecording) ? "Stop listening" : "Voice Input (Speech-to-Text)"}
                 >
                   {(isListening || isMediaRecording) ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5 text-emerald-400" />}
-                  <span className="text-[10px]">{(isListening || isMediaRecording) ? 'Recording...' : 'Voice'}</span>
+                  <span className="text-[10px]">{(isListening || isMediaRecording) ? (isRTL ? 'جاري التسجيل...' : 'Recording...') : (isRTL ? 'إملاء صوتي' : 'Voice')}</span>
                 </button>
 
                 {/* Hands-Free Auto-Speak Toggle */}
@@ -934,7 +939,7 @@ export default function ChatWorkspace({
                   title={autoSpeak ? "Auto-Voice Speech ON (Click to mute)" : "Auto-Voice Speech OFF"}
                 >
                   {autoSpeak ? <Volume2 className="w-3.5 h-3.5 animate-pulse" /> : <VolumeX className="w-3.5 h-3.5" />}
-                  <span className="text-[10px]">{autoSpeak ? 'Auto-Voice: ON' : 'Auto-Voice'}</span>
+                  <span className="text-[10px]">{autoSpeak ? (isRTL ? 'صوت تلقائي: مفعّل' : 'Auto-Voice: ON') : (isRTL ? 'صوت تلقائي' : 'Auto-Voice')}</span>
                 </button>
 
                 {/* Natural Human Voice Persona Selector */}
@@ -944,12 +949,25 @@ export default function ChatWorkspace({
                   className="bg-[#151824] border border-card-border hover:border-indigo-500/40 rounded-lg px-2 py-1 text-[10px] text-gray-300 font-mono focus:outline-none transition-colors"
                   title="Select Natural Human Neural Voice Persona"
                 >
-                  <option value="en-US-JennyNeural">👩 Jenny (Natural US)</option>
-                  <option value="en-US-GuyNeural">👨 Guy (Confident US)</option>
-                  <option value="en-US-AriaNeural">👩 Aria (Expressive US)</option>
-                  <option value="en-US-ChristopherNeural">👨 Christopher (Deep US)</option>
-                  <option value="en-GB-SoniaNeural">👩 Sonia (British UK)</option>
-                  <option value="en-GB-RyanNeural">👨 Ryan (British UK)</option>
+                  {isRTL ? (
+                    <>
+                      <option value="ar-SA-HamedNeural">🇸🇦 حامد (صوت قيادي وقور)</option>
+                      <option value="ar-SA-ZariyahNeural">🇸🇦 زارية (صوت طبيعي واثق)</option>
+                      <option value="ar-EG-ShakirNeural">🇪🇬 شاكر (صوت تحليلي دقيق)</option>
+                      <option value="ar-EG-SalmaNeural">🇪🇬 سلمى (صوت سريع ومقنع)</option>
+                      <option value="ar-AE-HamdanNeural">🇦🇪 حمدان (صوت رسمي حاسم)</option>
+                      <option value="ar-AE-FatimaNeural">🇦🇪 فاطمة (صوت هادئ ومنطقي)</option>
+                    </>
+                  ) : (
+                    <>
+                      <option value="en-US-JennyNeural">👩 Jenny (Natural US)</option>
+                      <option value="en-US-GuyNeural">👨 Guy (Confident US)</option>
+                      <option value="en-US-AriaNeural">👩 Aria (Expressive US)</option>
+                      <option value="en-US-ChristopherNeural">👨 Christopher (Deep US)</option>
+                      <option value="en-GB-SoniaNeural">👩 Sonia (British UK)</option>
+                      <option value="en-GB-RyanNeural">👨 Ryan (British UK)</option>
+                    </>
+                  )}
                 </select>
 
                 {/* Direct File Attachment Button */}
@@ -961,7 +979,7 @@ export default function ChatWorkspace({
                   title="Upload & Attach File from Computer"
                 >
                   <Paperclip className="w-3.5 h-3.5" />
-                  <span className="text-[10px] font-mono">Attach</span>
+                  <span className="text-[10px] font-mono">{isRTL ? 'إرفاق' : 'Attach'}</span>
                 </button>
 
                 {/* Pick from Library Button */}
@@ -976,7 +994,7 @@ export default function ChatWorkspace({
                   title="Pick from Documents Library"
                 >
                   <FolderOpen className="w-3.5 h-3.5" />
-                  <span className="text-[10px] font-mono">Library</span>
+                  <span className="text-[10px] font-mono">{isRTL ? 'المكتبة' : 'Library'}</span>
                 </button>
 
                 {/* Quick Slash Commands Trigger */}
@@ -992,7 +1010,7 @@ export default function ChatWorkspace({
                   title="Slash Commands"
                 >
                   <Command className="w-3 h-3 text-emerald-400" />
-                  <span className="text-[10px]">/cmds</span>
+                  <span className="text-[10px]">{isRTL ? 'الأوامر /' : '/cmds'}</span>
                 </button>
 
                 {showDocPicker && (
