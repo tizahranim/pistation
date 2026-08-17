@@ -38,13 +38,6 @@ Whether running fully air-gapped on private hardware or leveraging frontier clou
 
 ## ✨ Key Features
 
-### 🇸🇦 First-Class Arabic & RTL Support (دعم كامل للغة العربية)
-* **100% Native Arabic Localization**: Complete translations across all 10 core studios, navigation bars, modals, tooltips, and interactive components.
-* **Bi-directional Layout (RTL / LTR)**: Instant toggle between English and Arabic with full Right-to-Left (RTL) styling and layout alignment.
-* **Curated Arabic Neural Voices**: 6 regional Arabic voice profiles (Saudi `حامد` & `زارية`, Egyptian `شاكر` & `سلمى`, Emirati `حمدان` & `فاطمة`) for text-to-speech audio playback.
-* **Arabic Persona Prompts & Suggestions**: Cultural and linguistic alignment for agent personas, starter prompts, and debate deliberations.
-* **Hands-Free Arabic Dictation**: Real-time voice-to-text in Arabic and English across Chat, Projects Copilot, and Supervisor Interventions.
-
 ### ⚔️ Executive Arena & Multi-Agent Deliberation
 * **Structured Round-Table Debates**: Configure specialized debaters (e.g. Lead Architect, Security Auditor, Pragmatic Skeptic).
 * **Live Stance & Rebuttal Parsing**: Real-time extraction of agent agreement (`مُوافق`), dissent (`مُعارض`), partial compromise (`موافق جزئياً`), and team consensus score (0–100%).
@@ -89,6 +82,13 @@ Whether running fully air-gapped on private hardware or leveraging frontier clou
 * **Live Hardware Monitor**: Real-time CPU core matrix, RAM utilization, Dual GPU RTX 5070 VRAM usage, power draw, and temperature gauges.
 * **Physical Drive Explorer**: Mount detection, storage analysis, and safe USB unmounting across internal NVMe, SATA, and external USB drives.
 * **Process Lifecycle Manager**: Inspect process memory/CPU consumption with one-click graceful (`SIGTERM`) and force (`SIGKILL`) termination.
+
+### 🌐 Bilingual English & Arabic Support (دعم ثنائي اللغة والعربية)
+* **100% Native Arabic Localization**: Complete translations across all 10 core studios, navigation bars, modals, tooltips, and interactive components.
+* **Bi-directional Layout (RTL / LTR)**: Instant toggle between English and Arabic with full Right-to-Left (RTL) styling and layout alignment.
+* **Curated Arabic Neural Voices**: 6 regional Arabic voice profiles (Saudi `حامد` & `زارية`, Egyptian `شاكر` & `سلمى`, Emirati `حمدان` & `فاطمة`) for text-to-speech audio playback.
+* **Arabic Persona Prompts & Suggestions**: Cultural and linguistic alignment for agent personas, starter prompts, and debate deliberations.
+* **Hands-Free Arabic Dictation**: Real-time voice-to-text in Arabic and English across Chat, Projects Copilot, and Supervisor Interventions.
 
 ---
 
