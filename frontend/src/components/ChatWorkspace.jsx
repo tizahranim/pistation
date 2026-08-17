@@ -50,6 +50,7 @@ export default function ChatWorkspace({
   queuedPrompt,
   onClearQueuedPrompt
 }) {
+  const { t, isRTL } = useLanguage();
   const [messages, setMessages] = useState([]);
   const [inputPrompt, setInputPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
