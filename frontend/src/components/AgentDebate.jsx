@@ -156,6 +156,39 @@ export default function AgentDebate({
   onRefreshDocuments
 }) {
   const { language, t, isRTL } = useLanguage();
+
+  const getLocalizedAgentName = (agentName) => {
+    if (!isRTL) return agentName;
+    const map = {
+      'Pi Lead Agent': 'الوكيل القائد Pi',
+      'System Architect': 'مهندس النظم',
+      'Doc Analyst & Researcher': 'محلل المستندات والباحث',
+      'Security Auditor': 'مدقق الأمان والحماية',
+      'General Purpose Agent': 'وكيل المهام العامة',
+      'Human Supervisor': 'المشرف البشري'
+    };
+    return map[agentName] || agentName;
+  };
+
+  const getLocalizedRole = (agentRole) => {
+    if (!isRTL) return agentRole || 'Debater';
+    const map = {
+      'Executive Moderator & Synthesizer': 'المشرف التنفيذي والموفق',
+      'Lead Proponent & Solution Architect': 'المقترح الرئيسي ومهندس الحلول',
+      "Devil's Advocate & Critical Skeptic": 'المحامي الناقد والمشكك الموضوعي',
+      'Security & Vulnerability Auditor': 'مدقق الأمان والحماية واكتشاف الثغرات',
+      'Performance & Latency Optimizer': 'محسن الأداء وسرعة الاستجابة',
+      'Cost & Infrastructure Analyst': 'محلل التكاليف والبنية التحتية',
+      'Product & User Experience Champion': 'مسؤول استراتيجية المنتج وتجربة المستخدم',
+      'Generalist Problem Solver & Code Orchestrator': 'المساعد العام المتقدم وحلال المشكلات والأكواد',
+      'Software Architecture & Design Review': 'معمارية البرمجيات ومراجعة التصميم',
+      'Deep Document Synthesis & Fact-Checker': 'استخلاص المستندات العميقة وتدقيق الحقائق',
+      'Vulnerability & Safety Specialist': 'أخصائي الثغرات والأمان البرمجي',
+      'General Problem Solver & Assistant': 'مساعد عام وحلال للمشكلات'
+    };
+    return map[agentRole] || agentRole;
+  };
+
   const [selectedDocIds, setSelectedDocIds] = useState([]);
   const [selectedAgentIds, setSelectedAgentIds] = useState([]);
   const [leaderId, setLeaderId] = useState(null);
@@ -1107,12 +1140,12 @@ export default function AgentDebate({
   };
 
   const getStanceTheme = (stance) => {
-    if (!stance || !stance.type) return { badge: 'bg-gray-700/40 text-gray-300 border-gray-600', label: 'NEUTRAL' };
-    const t = stance.type.toUpperCase();
-    if (t === 'AGREE') return { badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40', label: `AGREE (${stance.target || 'Team'})` };
-    if (t === 'DISAGREE') return { badge: 'bg-rose-500/20 text-rose-300 border-rose-500/40', label: `REBUTTAL (${stance.target || 'Claim'})` };
-    if (t === 'PARTIAL') return { badge: 'bg-amber-500/20 text-amber-300 border-amber-500/40', label: `PARTIAL (${stance.target || 'Trade-off'})` };
-    return { badge: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40', label: 'ANALYSIS' };
+    if (!stance || !stance.type) return { badge: 'bg-gray-700/40 text-gray-300 border-gray-600', label: isRTL ? 'مُحايد' : 'NEUTRAL' };
+    const st = stance.type.toUpperCase();
+    if (st === 'AGREE') return { badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40', label: isRTL ? `مُوافق (${getLocalizedAgentName(stance.target) || 'الجميع'})` : `AGREE (${stance.target || 'Team'})` };
+    if (st === 'DISAGREE') return { badge: 'bg-rose-500/20 text-rose-300 border-rose-500/40', label: isRTL ? `مُعارض (${getLocalizedAgentName(stance.target) || 'الادعاء'})` : `REBUTTAL (${stance.target || 'Claim'})` };
+    if (st === 'PARTIAL') return { badge: 'bg-amber-500/20 text-amber-300 border-amber-500/40', label: isRTL ? `موافق جزئياً (${getLocalizedAgentName(stance.target) || 'المفاضلة'})` : `PARTIAL (${stance.target || 'Trade-off'})` };
+    return { badge: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40', label: isRTL ? 'تحليل' : 'ANALYSIS' };
   };
 
   const selectedAgentsList = useMemo(() => {
@@ -1168,9 +1201,9 @@ export default function AgentDebate({
             </div>
             <div>
               <h2 className="text-xs font-bold text-white uppercase tracking-wider font-mono">
-                Executive Arena
+                {isRTL ? "ساحة المداولات التنفيذية" : "Executive Arena"}
               </h2>
-              <p className="text-[10px] text-gray-400">Multi-Agent Deliberation</p>
+              <p className="text-[10px] text-gray-400">{isRTL ? "مداولة متعددة الوكلاء" : "Multi-Agent Deliberation"}</p>
             </div>
           </div>
 
@@ -1198,7 +1231,7 @@ export default function AgentDebate({
           {/* Quick Presets Section */}
           <div className="space-y-2">
             <span className="text-[10px] font-bold font-mono uppercase text-gray-400 px-1">
-              Debate Presets
+              {isRTL ? 'قوالب المناظرات الجاهزة' : 'Debate Presets'}
             </span>
             <div className="grid grid-cols-2 gap-1.5">
               {DEBATE_TEMPLATES.map(tpl => {
@@ -1271,7 +1304,7 @@ export default function AgentDebate({
                           ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
                           : 'bg-amber-500/15 text-amber-300 border-amber-500/30'
                       }`}>
-                        {disc.status || 'saved'}
+                        {isRTL ? (disc.status === 'completed' ? 'مكتملة' : disc.status === 'in_progress' ? 'جارية' : disc.status === 'interrupted' ? 'متوقفة' : 'محفوظة') : (disc.status || 'saved')}
                       </span>
                     </div>
                   </div>
@@ -1291,8 +1324,8 @@ export default function AgentDebate({
                 <VolumeX className="w-4 h-4 text-gray-500" />
               )}
               <div>
-                <div className="text-xs font-bold text-gray-200 font-mono">Neural Voiceover</div>
-                <div className="text-[10px] text-gray-500">Unique voice per agent</div>
+                <div className="text-xs font-bold text-gray-200 font-mono">{isRTL ? "التعليق الصوتي العصبي" : "Neural Voiceover"}</div>
+                <div className="text-[10px] text-gray-500">{isRTL ? "صوت فريد لكل وكيل" : "Unique voice per agent"}</div>
               </div>
             </div>
 
@@ -1401,7 +1434,7 @@ export default function AgentDebate({
                             {agent.avatar || '🤖'}
                           </div>
                           <div className="truncate">
-                            <h4 className="font-bold text-xs text-white truncate">{agent.name}</h4>
+                            <h4 className="font-bold text-xs text-white truncate">{getLocalizedAgentName(agent.name)}</h4>
                             <div className="text-[10px] text-gray-400 font-mono truncate">{agent.model_id}</div>
                           </div>
                         </div>
@@ -1620,7 +1653,7 @@ export default function AgentDebate({
                         ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 animate-pulse'
                         : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
                     }`}>
-                      {isStreaming ? `● LIVE: Round ${currentRound} (${currentPhase})` : 'Concluded'}
+                      {isStreaming ? `● LIVE: Round ${currentRound} (${currentPhase})` : (isRTL ? 'مكتملة' : 'Concluded')}
                     </span>
                   </div>
                   <div className="text-[10px] text-gray-400 font-mono mt-0.5">
@@ -1633,7 +1666,7 @@ export default function AgentDebate({
               <div className="flex items-center gap-3">
                 {/* Consensus Gauge */}
                 <div className="p-2 px-3 rounded-xl bg-[#121526] border border-card-border flex items-center gap-2.5">
-                  <div className="text-[10px] font-mono text-gray-400">Consensus:</div>
+                  <div className="text-[10px] font-mono text-gray-400">{isRTL ? "نسبة التوافق:" : "Consensus:"}</div>
                   <div className="w-20 bg-gray-800 rounded-full h-2 overflow-hidden border border-white/5">
                     <div
                       className={`h-full transition-all duration-500 ${
@@ -1660,7 +1693,7 @@ export default function AgentDebate({
                   title={globalVoiceEnabled ? 'Voiceover Active' : 'Voiceover Muted'}
                 >
                   {globalVoiceEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
-                  <span>{globalVoiceEnabled ? 'Audio ON' : 'Audio OFF'}</span>
+                  <span>{globalVoiceEnabled ? (isRTL ? 'الصوت مفعّل' : 'Audio ON') : (isRTL ? 'الصوت متوقف' : 'Audio OFF')}</span>
                 </button>
 
                 {/* Stop / Export */}
@@ -1679,7 +1712,7 @@ export default function AgentDebate({
                       className="px-3 py-1.5 rounded-xl bg-[#141829] hover:bg-[#1f253e] text-gray-300 hover:text-white border border-card-border text-xs font-mono flex items-center gap-1.5 cursor-pointer"
                     >
                       <Download className="w-3.5 h-3.5 text-cyan-400" />
-                      <span>Export MD</span>
+                      <span>{isRTL ? 'تصدير كـ MD' : 'Export MD'}</span>
                     </button>
                   </div>
                 )}
@@ -1718,18 +1751,18 @@ export default function AgentDebate({
 
                       <div className="truncate">
                         <div className="flex items-center gap-1.5">
-                          <h4 className="font-bold text-xs text-white truncate">{agent.name}</h4>
+                          <h4 className="font-bold text-xs text-white truncate">{getLocalizedAgentName(agent.name)}</h4>
                           {isLeader && <Crown className="w-3 h-3 text-amber-400 fill-amber-400 shrink-0" />}
                         </div>
-                        <div className="text-[10px] text-purple-300 font-sans truncate">{role}</div>
+                        <div className="text-[10px] text-purple-300 font-sans truncate">{getLocalizedRole(role)}</div>
                         {isSpeaking ? (
                           <div className="text-[9px] font-mono text-emerald-400 flex items-center gap-1 mt-0.5 font-bold">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                            <span>{isAudioSpeaking ? 'Speaking...' : 'Thinking...'}</span>
+                            <span>{isAudioSpeaking ? (isRTL ? 'يتحدث الآن...' : 'Speaking...') : (isRTL ? 'جاري التفكير...' : 'Thinking...')}</span>
                           </div>
                         ) : (
                           <div className="text-[9px] font-mono text-gray-500 truncate mt-0.5">
-                            Voice: {voice?.split('-')[2]?.replace('Neural', '') || 'Natural'}
+                            {isRTL ? 'الصوت:' : 'Voice:'} {voice?.split('-')[2]?.replace('Neural', '') || (isRTL ? 'طبيعي' : 'Natural')}
                           </div>
                         )}
                       </div>
@@ -1766,8 +1799,8 @@ export default function AgentDebate({
                           {isHuman ? '👤' : (turn.agent_avatar || '🤖')}
                         </div>
                         <div className="truncate">
-                          <span className="font-bold text-xs text-white font-mono">{turn.speaker || turn.agent_name}</span>
-                          {turn.role && <span className="text-[10px] text-gray-400 ml-2 font-sans">({turn.role})</span>}
+                          <span className="font-bold text-xs text-white font-mono">{getLocalizedAgentName(turn.speaker || turn.agent_name)}</span>
+                          {turn.role && <span className="text-[10px] text-gray-400 ml-2 font-sans">({getLocalizedRole(turn.role)})</span>}
                         </div>
                       </div>
 
@@ -1912,7 +1945,7 @@ export default function AgentDebate({
               <form onSubmit={handleSendIntervention} className="flex items-center gap-2">
                 <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-300 text-xs font-mono shrink-0">
                   <User className="w-3.5 h-3.5 text-purple-400" />
-                  <span className="hidden sm:inline">Intervene</span>
+                  <span className="hidden sm:inline">{isRTL ? "تدخل المشرف" : "Intervene"}</span>
                 </div>
 
                 <select
@@ -1920,9 +1953,9 @@ export default function AgentDebate({
                   onChange={(e) => setTargetInterventionAgentId(e.target.value)}
                   className="bg-[#141829] border border-card-border/80 rounded-xl px-2.5 py-2 text-xs text-gray-300 font-mono focus:outline-none focus:border-purple-500 shrink-0 cursor-pointer"
                 >
-                  <option value="leader">Direct to Executive Lead</option>
+                  <option value="leader">{isRTL ? "توجيه إلى المشرف التنفيذي" : "Direct to Executive Lead"}</option>
                   {selectedAgentsList.map(a => (
-                    <option key={a.id} value={a.id}>Direct to {a.name}</option>
+                    <option key={a.id} value={a.id}>{isRTL ? `توجيه إلى ${getLocalizedAgentName(a.name)}` : `Direct to ${a.name}`}</option>
                   ))}
                 </select>
 
@@ -1935,7 +1968,7 @@ export default function AgentDebate({
                     type="text"
                     value={interventionInput}
                     onChange={(e) => setInterventionInput(e.target.value)}
-                    placeholder={(isListeningIntervene || isMediaRecordingIntervene) ? "Listening to your voice..." : "Inject supervisor guidance, challenge an assumption, or steer discussion..."}
+                    placeholder={(isListeningIntervene || isMediaRecordingIntervene) ? (isRTL ? "جاري الاستماع لصوتك..." : "Listening to your voice...") : (isRTL ? "...أدخل توجيهات المشرف، أو اعترض على فرضية، أو وجّه مسار المناقشة" : "Inject supervisor guidance, challenge an assumption, or steer discussion...")}
                     className="flex-1 bg-transparent py-1 text-xs text-white placeholder-gray-500 focus:outline-none font-sans"
                   />
 
@@ -1978,7 +2011,7 @@ export default function AgentDebate({
                   className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs font-mono flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                 >
                   <Send className="w-3.5 h-3.5" />
-                  <span>Send</span>
+                  <span>{isRTL ? 'إرسال' : 'Send'}</span>
                 </button>
               </form>
 
