@@ -271,25 +271,32 @@ export default function ChatWorkspace({
   const [selectedVoice, setSelectedVoice] = useState('en-US-JennyNeural');
   const currentAudioRef = useRef(null);
 
+  const stopAudio = () => {
+    if (currentAudioRef.current) {
+      try {
+        currentAudioRef.current.pause();
+        currentAudioRef.current.currentTime = 0;
+        currentAudioRef.current.src = '';
+      } catch (e) {}
+      currentAudioRef.current = null;
+    }
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      try {
+        window.speechSynthesis.cancel();
+      } catch (e) {}
+    }
+    setSpeakingMsgId(null);
+  };
+
   const speakText = async (text, msgId) => {
     // If currently speaking this message, pause and cancel
     if (speakingMsgId === msgId) {
-      if (currentAudioRef.current) {
-        currentAudioRef.current.pause();
-        currentAudioRef.current = null;
-      }
-      if (window.speechSynthesis) window.speechSynthesis.cancel();
-      setSpeakingMsgId(null);
+      stopAudio();
       return;
     }
 
-    // Stop any ongoing audio
-    if (currentAudioRef.current) {
-      currentAudioRef.current.pause();
-      currentAudioRef.current = null;
-    }
-    if (window.speechSynthesis) window.speechSynthesis.cancel();
-
+    // Stop any ongoing audio immediately before starting new one
+    stopAudio();
     setSpeakingMsgId(msgId);
 
     // Clean emojis, code blocks, and markdown before synthesis
@@ -299,6 +306,11 @@ export default function ChatWorkspace({
       .replace(/`([^`]+)`/g, '$1')
       .replace(/[#*_\->]/g, '')
       .trim();
+
+    if (!cleanSpeechText) {
+      setSpeakingMsgId(null);
+      return;
+    }
 
     try {
       // 1. High-Definition Neural Human Voice Synthesis
@@ -325,6 +337,7 @@ export default function ChatWorkspace({
         audio.onerror = () => {
           setSpeakingMsgId(null);
           currentAudioRef.current = null;
+          URL.revokeObjectURL(audioUrl);
         };
 
         await audio.play();
@@ -336,7 +349,7 @@ export default function ChatWorkspace({
 
     // Fallback: browser SpeechSynthesis
     if ('speechSynthesis' in window) {
-      const utterance = new SpeechSynthesisUtterance(cleanSpeechText);
+      const utterance = new SpeechSynthesisUtterance(cleanSpeechText.slice(0, 1500));
       utterance.rate = 1.0;
       utterance.onend = () => setSpeakingMsgId(null);
       utterance.onerror = () => setSpeakingMsgId(null);
@@ -907,15 +920,18 @@ export default function ChatWorkspace({
                 {/* Hands-Free Auto-Speak Toggle */}
                 <button
                   type="button"
-                  onClick={() => setAutoSpeak(!autoSpeak)}
+                  onClick={() => {
+                    if (autoSpeak) stopAudio();
+                    setAutoSpeak(!autoSpeak);
+                  }}
                   className={`p-1.5 rounded-lg border text-xs font-mono transition-all flex items-center gap-1 ${
                     autoSpeak
-                      ? 'bg-indigo-500/20 border-indigo-500/40 text-indigo-300 shadow-sm'
-                      : 'border-card-border hover:bg-[#202535] text-gray-400 hover:text-gray-200'
+                      ? 'bg-purple-600 text-white border-purple-500 font-bold shadow-md shadow-purple-600/30'
+                      : 'border-card-border hover:bg-[#202535] text-gray-400 hover:text-purple-300'
                   }`}
-                  title="When enabled, every agent reply will be automatically read aloud"
+                  title={autoSpeak ? "Auto-Voice Speech ON (Click to mute)" : "Auto-Voice Speech OFF"}
                 >
-                  <Headphones className="w-3.5 h-3.5 text-indigo-400" />
+                  {autoSpeak ? <Volume2 className="w-3.5 h-3.5 animate-pulse" /> : <VolumeX className="w-3.5 h-3.5" />}
                   <span className="text-[10px]">{autoSpeak ? 'Auto-Voice: ON' : 'Auto-Voice'}</span>
                 </button>
 

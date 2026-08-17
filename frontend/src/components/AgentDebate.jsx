@@ -163,6 +163,7 @@ export default function AgentDebate({
   const [globalVoiceEnabled, setGlobalVoiceEnabled] = useState(true);
   const [speakingTurnId, setSpeakingTurnId] = useState(null);
   const [speakingAgentId, setSpeakingAgentId] = useState(null);
+  const playbackIdRef = useRef(0);
   const audioQueueRef = useRef([]);
   const isPlayingAudioRef = useRef(false);
   const currentAudioRef = useRef(null);
@@ -237,6 +238,7 @@ export default function AgentDebate({
   }, []);
 
   const stopAllAudio = () => {
+    playbackIdRef.current += 1;
     if (currentAudioRef.current) {
       try {
         currentAudioRef.current.pause();
@@ -266,13 +268,12 @@ export default function AgentDebate({
     });
   };
 
-  // Play natural speech with agent's mapped voice
+  // Play natural speech with agent's mapped voice with strict exclusivity
   const speakText = async (text, voiceId, turnIdentifier, agentId) => {
     if (!text || !globalVoiceEnabled) return;
-    
-    setSpeakingTurnId(turnIdentifier);
-    if (agentId) setSpeakingAgentId(agentId);
 
+    const currentPlayId = ++playbackIdRef.current;
+    
     // Clean text for speech
     const cleanSpeechText = text
       .replace(/```[\s\S]*?```/g, 'Code block omitted.')
@@ -281,6 +282,11 @@ export default function AgentDebate({
       .replace(/`([^`]+)`/g, '$1')
       .replace(/[#*_\->]/g, '')
       .trim();
+
+    if (!cleanSpeechText) return;
+
+    setSpeakingTurnId(turnIdentifier);
+    if (agentId) setSpeakingAgentId(agentId);
 
     try {
       const res = await fetch('/api/voice/speak', {
@@ -292,30 +298,41 @@ export default function AgentDebate({
         })
       });
 
+      // If playback was cancelled or changed during fetch, abort
+      if (playbackIdRef.current !== currentPlayId || !globalVoiceEnabled) {
+        return;
+      }
+
       if (res.ok) {
         const blob = await res.blob();
+        if (playbackIdRef.current !== currentPlayId || !globalVoiceEnabled) return;
+
         const audioUrl = URL.createObjectURL(blob);
         const audio = new Audio(audioUrl);
         currentAudioRef.current = audio;
 
         await new Promise((resolve) => {
-          audio.onended = () => {
-            setSpeakingTurnId(null);
-            setSpeakingAgentId(null);
-            currentAudioRef.current = null;
-            URL.revokeObjectURL(audioUrl);
-            resolve();
+          let resolved = false;
+          const finish = () => {
+            if (!resolved) {
+              resolved = true;
+              if (currentAudioRef.current === audio) {
+                currentAudioRef.current = null;
+              }
+              if (playbackIdRef.current === currentPlayId) {
+                setSpeakingTurnId(null);
+                setSpeakingAgentId(null);
+              }
+              URL.revokeObjectURL(audioUrl);
+              resolve();
+            }
           };
-          audio.onerror = () => {
-            setSpeakingTurnId(null);
-            setSpeakingAgentId(null);
-            currentAudioRef.current = null;
-            resolve();
-          };
-          audio.play().catch(() => {
-            setSpeakingTurnId(null);
-            setSpeakingAgentId(null);
-            resolve();
+
+          audio.onended = finish;
+          audio.onerror = finish;
+          audio.play().catch((err) => {
+            console.warn('Audio playback prevented or interrupted:', err);
+            finish();
           });
         });
         return;
@@ -324,30 +341,37 @@ export default function AgentDebate({
       console.warn('Neural TTS play error, fallback to browser speech synthesis:', e);
     }
 
+    if (playbackIdRef.current !== currentPlayId || !globalVoiceEnabled) return;
+
     // Fallback: browser SpeechSynthesis
     if ('speechSynthesis' in window) {
       await new Promise((resolve) => {
         const utt = new SpeechSynthesisUtterance(cleanSpeechText.slice(0, 1000));
-        utt.onend = () => {
-          setSpeakingTurnId(null);
-          setSpeakingAgentId(null);
-          resolve();
+        let resolved = false;
+        const finish = () => {
+          if (!resolved) {
+            resolved = true;
+            if (playbackIdRef.current === currentPlayId) {
+              setSpeakingTurnId(null);
+              setSpeakingAgentId(null);
+            }
+            resolve();
+          }
         };
-        utt.onerror = () => {
-          setSpeakingTurnId(null);
-          setSpeakingAgentId(null);
-          resolve();
-        };
+        utt.onend = finish;
+        utt.onerror = finish;
         window.speechSynthesis.speak(utt);
       });
     } else {
-      setSpeakingTurnId(null);
-      setSpeakingAgentId(null);
+      if (playbackIdRef.current === currentPlayId) {
+        setSpeakingTurnId(null);
+        setSpeakingAgentId(null);
+      }
     }
   };
 
   const processAudioQueue = async () => {
-    if (isPlayingAudioRef.current || audioQueueRef.current.length === 0 || !globalVoiceEnabled) return;
+    if (isPlayingAudioRef.current || !globalVoiceEnabled) return;
     isPlayingAudioRef.current = true;
     while (audioQueueRef.current.length > 0 && globalVoiceEnabled) {
       const item = audioQueueRef.current.shift();
@@ -372,7 +396,7 @@ export default function AgentDebate({
     stopAllAudio();
     const targetAgentId = turn.agent_id || (turn.is_human ? null : leaderId);
     const voiceId = voiceMap[targetAgentId] || (turn.is_human ? 'en-US-GuyNeural' : 'en-US-JennyNeural');
-    await speakText(turn.content, voiceId, turn.id, targetAgentId);
+    queueVoicePlayback(turn.content, voiceId, turn.id, targetAgentId);
   };
 
   const handleApplyTemplate = (tpl) => {
