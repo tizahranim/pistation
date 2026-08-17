@@ -96,7 +96,6 @@ Whether running fully air-gapped on private hardware or leveraging frontier clou
 
 * [ ] **🖥️ Native Desktop Application**: Package PiStation as a lightweight standalone desktop app (via **Tauri**) for Linux, macOS, and Windows with system tray support and one-click background launch.
 * [ ] **🌍 Expanded Language Support**: Extend the built-in i18n system to support Spanish, French, German, Japanese, and Chinese.
-* [ ] **🔌 Expanded MCP & Skills Library**: Add more out-of-the-box Model Context Protocol tools (Docker container management, Git automation, Brave search).
 * [ ] **📦 One-Click Docker Compose**: Provide an all-in-one `docker-compose.yml` for instant, zero-dependency deployment on local servers, homelabs, and NAS devices.
 
 ---
