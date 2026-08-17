@@ -488,109 +488,58 @@ export default function Overview({
             </div>
           </div>
 
-          {/* Right: Modern Telemetry Matrix with Micro-Gauges & Click-to-Inspect */}
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
-            {/* Host OS Pill */}
-            <button
-              type="button"
-              onClick={() => setActiveTab('resources')}
-              className="px-2.5 py-1.5 rounded-xl bg-[#131728]/80 hover:bg-[#1c223c] border border-cyan-500/20 hover:border-cyan-500/40 flex items-center gap-2 transition-all shadow-sm cursor-pointer group"
-              title={isRTL ? "نظام التشغيل ومواصفات العتاد" : `${telemetry?.os?.name || 'Fedora'} ${telemetry?.os?.release || '44'} (COSMIC)`}
-            >
-              <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                <Server className="w-3.5 h-3.5 text-cyan-400 group-hover:scale-110 transition-transform" />
-              </div>
-              <div className="text-left font-mono">
-                <span className="text-[10px] font-bold text-gray-200 block leading-none">{telemetry?.os?.distro || 'Fedora 44'}</span>
-                <span className="text-[8px] text-gray-400 leading-none">COSMIC</span>
-              </div>
-            </button>
+          {/* Right: Sleek Unified Horizontal Telemetry Bar */}
+          <div
+            onClick={() => setActiveTab('resources')}
+            className="flex items-center rounded-xl bg-[#111422]/90 border border-white/10 hover:border-cyan-500/40 p-1 divide-x divide-white/10 shadow-md font-mono text-xs cursor-pointer transition-all hover:bg-[#15192c] group shrink-0"
+            title={isRTL ? "اضغط لفتح شاشة مراقبة موارد النظام والعتاد" : "Click to open System Resources & Hardware Telemetry"}
+          >
+            {/* Host OS */}
+            <div className="flex items-center gap-1.5 px-2.5 py-0.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <Server className="w-3.5 h-3.5 text-cyan-400" />
+              <span className="text-[11px] font-bold text-gray-200">{telemetry?.os?.distro || 'Fedora 44'}</span>
+            </div>
 
-            {/* CPU Cores & Micro-Gauge */}
-            <button
-              type="button"
-              onClick={() => setActiveTab('resources')}
-              className="px-2.5 py-1.5 rounded-xl bg-[#131728]/80 hover:bg-[#1c223c] border border-emerald-500/20 hover:border-emerald-500/40 flex items-center gap-2 transition-all shadow-sm cursor-pointer group"
-              title={isRTL ? "مراقبة المعالج والحمولة" : `CPU: ${telemetry?.cpu?.logical_cores || 28} Cores @ ${cpuPercentVal}% load`}
-            >
-              <Cpu className="w-3.5 h-3.5 text-emerald-400 group-hover:scale-110 transition-transform" />
-              <div className="text-left font-mono">
-                <div className="flex items-center justify-between gap-1.5 text-[10px] font-bold text-gray-200 leading-none">
-                  <span>{telemetry?.cpu?.logical_cores || 28} {isRTL ? 'أنوية' : 'Cores'}</span>
-                  <span className={cpuPercentVal > 75 ? 'text-red-400' : (cpuPercentVal > 40 ? 'text-amber-400' : 'text-emerald-300')}>{cpuPercentVal}%</span>
-                </div>
-                <div className="w-12 bg-black/40 h-1 rounded-full overflow-hidden mt-1 border border-white/5">
-                  <div
-                    className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-300"
-                    style={{ width: `${Math.min(100, Math.max(5, cpuPercentVal))}%` }}
-                  />
-                </div>
-              </div>
-            </button>
+            {/* CPU */}
+            <div className="flex items-center gap-1.5 px-2.5 py-0.5">
+              <Cpu className="w-3.5 h-3.5 text-emerald-400" />
+              <span className="text-[11px] font-semibold text-gray-300">
+                {telemetry?.cpu?.logical_cores || 28} {isRTL ? 'نواة' : 'Cores'}
+              </span>
+              <span className={`text-[11px] font-bold ${cpuPercentVal > 70 ? 'text-red-400' : (cpuPercentVal > 40 ? 'text-amber-400' : 'text-emerald-300')}`}>
+                {cpuPercentVal}%
+              </span>
+            </div>
 
-            {/* System RAM & Micro-Gauge */}
-            <button
-              type="button"
-              onClick={() => setActiveTab('resources')}
-              className="px-2.5 py-1.5 rounded-xl bg-[#131728]/80 hover:bg-[#1c223c] border border-purple-500/20 hover:border-purple-500/40 flex items-center gap-2 transition-all shadow-sm cursor-pointer group"
-              title={isRTL ? "استهلاك الذاكرة العشوائية RAM" : `RAM: ${ramUsedGb} / ${ramTotalGb} GB (${ramPercentVal}%)`}
-            >
-              <MemoryStick className="w-3.5 h-3.5 text-purple-400 group-hover:scale-110 transition-transform" />
-              <div className="text-left font-mono">
-                <div className="flex items-center justify-between gap-1.5 text-[10px] font-bold text-gray-200 leading-none">
-                  <span>{ramUsedGb} / {ramTotalGb} GB</span>
-                  <span className="text-purple-300 text-[9px]">{ramPercentVal}%</span>
-                </div>
-                <div className="w-12 bg-black/40 h-1 rounded-full overflow-hidden mt-1 border border-white/5">
-                  <div
-                    className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-300"
-                    style={{ width: `${Math.min(100, Math.max(5, ramPercentVal))}%` }}
-                  />
-                </div>
-              </div>
-            </button>
+            {/* RAM */}
+            <div className="flex items-center gap-1.5 px-2.5 py-0.5">
+              <MemoryStick className="w-3.5 h-3.5 text-purple-400" />
+              <span className="text-[11px] font-semibold text-gray-300">
+                {ramUsedGb} / {ramTotalGb} GB
+              </span>
+              <span className="text-[10px] text-purple-300 font-bold">
+                {ramPercentVal}%
+              </span>
+            </div>
 
-            {/* Dual GPU & VRAM Live Telemetry */}
-            <button
-              type="button"
-              onClick={() => setActiveTab('resources')}
-              className="px-2.5 py-1.5 rounded-xl bg-[#131728]/80 hover:bg-[#1c223c] border border-amber-500/20 hover:border-amber-500/40 flex items-center gap-2 transition-all shadow-sm cursor-pointer group"
-              title={isRTL ? "كروت الشاشة وذاكرة VRAM والحرارة" : `Dual RTX 5070: ${(totalGpuVramUsedMb / 1024).toFixed(1)} / ${totalGpuVramTotalGb} GB VRAM • ${gpuMaxTemp}°C`}
-            >
-              <Zap className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform" />
-              <div className="text-left font-mono">
-                <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-200 leading-none">
-                  <span>{gpuLabel}</span>
-                  <span className="text-amber-300 text-[9px]">{gpuMaxTemp}°C</span>
-                </div>
-                <div className="text-[8px] text-gray-400 mt-0.5 leading-none">
-                  {totalGpuVramUsedGb} / {totalGpuVramTotalGb} GB VRAM
-                </div>
-              </div>
-            </button>
+            {/* Dual GPU */}
+            <div className="flex items-center gap-1.5 px-2.5 py-0.5">
+              <Zap className="w-3.5 h-3.5 text-amber-400" />
+              <span className="text-[11px] font-semibold text-gray-300">{gpuLabel}</span>
+              <span className="text-[10px] text-amber-300 font-bold">{gpuMaxTemp}°C</span>
+            </div>
 
-            {/* Storage Drive & Micro-Gauge */}
-            <button
-              type="button"
-              onClick={() => setActiveTab('resources')}
-              className="px-2.5 py-1.5 rounded-xl bg-[#131728]/80 hover:bg-[#1c223c] border border-indigo-500/20 hover:border-indigo-500/40 flex items-center gap-2 transition-all shadow-sm cursor-pointer group"
-              title={isRTL ? "مساحة التخزين المستهلكة والمتبقية" : `Storage: ${diskFreeGb} GB Free (${diskPercentVal}% used)`}
-            >
-              <HardDrive className="w-3.5 h-3.5 text-indigo-400 group-hover:scale-110 transition-transform" />
-              <div className="text-left font-mono">
-                <div className="flex items-center justify-between gap-1.5 text-[10px] font-bold text-gray-200 leading-none">
-                  <span>{diskFreeGb} {isRTL ? 'متاح' : 'Free'}</span>
-                  <span className="text-indigo-300 text-[9px]">{diskPercentVal}%</span>
-                </div>
-                <div className="w-12 bg-black/40 h-1 rounded-full overflow-hidden mt-1 border border-white/5">
-                  <div
-                    className="h-full bg-gradient-to-r from-indigo-500 to-cyan-400 rounded-full transition-all duration-300"
-                    style={{ width: `${Math.min(100, Math.max(5, diskPercentVal))}%` }}
-                  />
-                </div>
-              </div>
-            </button>
+            {/* Storage */}
+            <div className="flex items-center gap-1.5 px-2.5 py-0.5">
+              <HardDrive className="w-3.5 h-3.5 text-indigo-400" />
+              <span className="text-[11px] font-semibold text-gray-300">
+                {diskFreeGb} {isRTL ? 'متاح' : 'GB Free'}
+              </span>
+              <span className="text-[10px] text-indigo-300 font-bold">
+                {diskPercentVal}%
+              </span>
+            </div>
           </div>
         </div>
       </div>
