@@ -121,37 +121,43 @@ class LLMRouter:
             payload.pop("temperature", None)
             payload["max_completion_tokens"] = 8192
 
-        async with httpx.AsyncClient(timeout=120.0) as client:
-            async with client.stream("POST", url, headers=headers, json=payload) as response:
-                if response.status_code != 200:
-                    err_text = await response.aread()
-                    yield {
-                        "content": f"⚠️ {label} Error ({response.status_code}): {err_text.decode('utf-8')}",
-                        "done": True
-                    }
-                    return
+        try:
+            async with httpx.AsyncClient(timeout=120.0) as client:
+                async with client.stream("POST", url, headers=headers, json=payload) as response:
+                    if response.status_code != 200:
+                        err_text = await response.aread()
+                        yield {
+                            "content": f"⚠️ {label} Error ({response.status_code}): {err_text.decode('utf-8', errors='ignore')}",
+                            "done": True
+                        }
+                        return
 
-                async for line in response.aiter_lines():
-                    if line.startswith("data: "):
-                        data_str = line[6:].strip()
-                        if data_str == "[DONE]":
-                            yield {"done": True}
-                            break
-                        try:
-                            data = json.loads(data_str)
-                            choices = data.get("choices", [])
-                            if choices:
-                                delta = choices[0].get("delta", {})
-                                content = delta.get("content", "")
-                                thinking = delta.get("reasoning", "") or delta.get("thinking", "") or delta.get("reasoning_content", "")
-                                if content or thinking:
-                                    yield {
-                                        "content": content,
-                                        "thinking": thinking,
-                                        "done": False
-                                    }
-                        except Exception:
-                            continue
+                    async for line in response.aiter_lines():
+                        if line.startswith("data: "):
+                            data_str = line[6:].strip()
+                            if data_str == "[DONE]":
+                                yield {"done": True}
+                                break
+                            try:
+                                data = json.loads(data_str)
+                                choices = data.get("choices", [])
+                                if choices:
+                                    delta = choices[0].get("delta", {})
+                                    content = delta.get("content", "")
+                                    thinking = delta.get("reasoning", "") or delta.get("thinking", "") or delta.get("reasoning_content", "")
+                                    if content or thinking:
+                                        yield {
+                                            "content": content,
+                                            "thinking": thinking,
+                                            "done": False
+                                        }
+                            except Exception:
+                                continue
+        except Exception as e:
+            yield {
+                "content": f"⚠️ {label} Connection Failure: {str(e)}",
+                "done": True
+            }
 
     @staticmethod
     async def _anthropic_stream(
@@ -202,36 +208,42 @@ class LLMRouter:
             "Content-Type": "application/json"
         }
 
-        async with httpx.AsyncClient(timeout=120.0) as client:
-            async with client.stream("POST", ANTHROPIC_BASE_URL.rstrip("/") + "/v1/messages", headers=headers, json=payload) as response:
-                if response.status_code != 200:
-                    err_text = await response.aread()
-                    yield {
-                        "content": f"⚠️ Anthropic Error ({response.status_code}): {err_text.decode('utf-8')}",
-                        "done": True
-                    }
-                    return
+        try:
+            async with httpx.AsyncClient(timeout=120.0) as client:
+                async with client.stream("POST", ANTHROPIC_BASE_URL.rstrip("/") + "/v1/messages", headers=headers, json=payload) as response:
+                    if response.status_code != 200:
+                        err_text = await response.aread()
+                        yield {
+                            "content": f"⚠️ Anthropic Error ({response.status_code}): {err_text.decode('utf-8', errors='ignore')}",
+                            "done": True
+                        }
+                        return
 
-                async for line in response.aiter_lines():
-                    if not line.startswith("data:"):
-                        continue
-                    data_str = line[5:].strip()
-                    if not data_str:
-                        continue
-                    try:
-                        data = json.loads(data_str)
-                        if data.get("type") == "content_block_delta":
-                            delta = data.get("delta", {})
-                            if delta.get("type") == "text_delta":
-                                yield {"content": delta.get("text", ""), "thinking": "", "done": False}
-                            elif delta.get("type") == "thinking_delta":
-                                yield {"content": "", "thinking": delta.get("thinking", ""), "done": False}
-                        elif data.get("type") in ("message_stop", "message_delta"):
-                            if data.get("type") == "message_stop":
-                                yield {"done": True}
-                                break
-                    except Exception:
-                        continue
+                    async for line in response.aiter_lines():
+                        if not line.startswith("data:"):
+                            continue
+                        data_str = line[5:].strip()
+                        if not data_str:
+                            continue
+                        try:
+                            data = json.loads(data_str)
+                            if data.get("type") == "content_block_delta":
+                                delta = data.get("delta", {})
+                                if delta.get("type") == "text_delta":
+                                    yield {"content": delta.get("text", ""), "thinking": "", "done": False}
+                                elif delta.get("type") == "thinking_delta":
+                                    yield {"content": "", "thinking": delta.get("thinking", ""), "done": False}
+                            elif data.get("type") in ("message_stop", "message_delta"):
+                                if data.get("type") == "message_stop":
+                                    yield {"done": True}
+                                    break
+                        except Exception:
+                            continue
+        except Exception as e:
+            yield {
+                "content": f"⚠️ Anthropic Connection Failure: {str(e)}",
+                "done": True
+            }
 
     @staticmethod
     async def _ollama_stream(
@@ -254,21 +266,27 @@ class LLMRouter:
             }
         }
 
-        async with httpx.AsyncClient(timeout=120.0) as client:
-            async with client.stream("POST", f"{OLLAMA_BASE_URL}/api/chat", json=payload) as response:
-                async for line in response.aiter_lines():
-                    if line.strip():
-                        try:
-                            data = json.loads(line)
-                            message = data.get("message", {})
-                            content = message.get("content", "")
-                            thinking = message.get("thinking", "")
-                            done = data.get("done", False)
+        try:
+            async with httpx.AsyncClient(timeout=120.0) as client:
+                async with client.stream("POST", f"{OLLAMA_BASE_URL}/api/chat", json=payload) as response:
+                    async for line in response.aiter_lines():
+                        if line.strip():
+                            try:
+                                data = json.loads(line)
+                                message = data.get("message", {})
+                                content = message.get("content", "")
+                                thinking = message.get("thinking", "")
+                                done = data.get("done", False)
 
-                            yield {
-                                "content": content,
-                                "thinking": thinking,
-                                "done": done
-                            }
-                        except Exception:
-                            continue
+                                yield {
+                                    "content": content,
+                                    "thinking": thinking,
+                                    "done": done
+                                }
+                            except Exception:
+                                continue
+        except Exception as e:
+            yield {
+                "content": f"⚠️ Ollama Connection Failure: {str(e)}",
+                "done": True
+            }

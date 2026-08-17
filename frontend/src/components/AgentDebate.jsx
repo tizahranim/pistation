@@ -422,14 +422,18 @@ export default function AgentDebate({
                   is_human: true
                 }]);
               } else if (event.type === 'agent_turn_start') {
-                setActiveSpeakerId(event.agent_id);
+                const aid = event.agent_id || event.agent?.id;
+                const aname = event.agent_name || event.agent?.name || 'Agent';
+                const aavatar = event.agent_avatar || event.agent?.avatar || '🤖';
+                const arole = event.role || event.agent?.role || 'Debater';
+                setActiveSpeakerId(aid);
                 activeTurnObject = {
                   id: `turn-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-                  agent_id: event.agent_id,
-                  agent_name: event.agent_name,
-                  agent_avatar: event.agent_avatar,
-                  role: event.role,
-                  round: event.round,
+                  agent_id: aid,
+                  agent_name: aname,
+                  agent_avatar: aavatar,
+                  role: arole,
+                  round: event.round || currentRound,
                   target_agent: event.target_agent,
                   target_agent_id: event.target_agent_id,
                   content: '',
@@ -442,7 +446,7 @@ export default function AgentDebate({
                   setCurrentTurn({ ...activeTurnObject });
                 }
               } else if (event.type === 'stance') {
-                if (activeTurnObject && activeTurnObject.agent_id === event.agent_id) {
+                if (activeTurnObject && (activeTurnObject.agent_id === event.agent_id || !event.agent_id)) {
                   activeTurnObject.stance = event.stance;
                   setCurrentTurn({ ...activeTurnObject });
                 }

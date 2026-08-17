@@ -124,7 +124,7 @@ class MultiAgentOrchestrator:
                     for t in conversation_history
                 )
 
-            # ---- Round 1: Opening statements (parallel streaming) ----
+            # ---- Round 1: Opening statements (clean sequential streaming) ----
             yield {"type": "round_start", "round": 1, "total_rounds": rounds, "phase": "opening"}
 
             if human_guidance:
@@ -134,71 +134,61 @@ class MultiAgentOrchestrator:
                     "content": human_guidance, "is_human": True
                 })
 
-            queue: asyncio.Queue = asyncio.Queue()
+            for a in roster:
+                is_leader = a["id"] == (leader["id"] if leader else None)
+                yield {
+                    "type": "agent_turn_start",
+                    "round": 1,
+                    "agent_id": a["id"],
+                    "agent_name": a["name"],
+                    "agent_avatar": a["avatar"],
+                    "role": role_of(a),
+                    "model": a["model_id"],
+                    "is_leader": is_leader,
+                    "agent": {
+                        "id": a["id"], "name": a["name"], "avatar": a["avatar"],
+                        "role": role_of(a), "model": a["model_id"], "is_leader": is_leader
+                    }
+                }
 
-            async def opening_speaker(agent: Dict[str, Any]):
-                system_prompt = f"""You are {agent['name']}, acting with the specific assigned role of '{role_of(agent)}'.
-Base instructions: {agent['system_prompt']}
+                system_prompt = f"""You are {a['name']}, acting with the specific assigned role of '{role_of(a)}'.
+Base instructions: {a['system_prompt']}
 
 You are participating in an executive roundtable debate.
 TOPIC: {topic}
 TEAM LEADER: {leader_name}
-PHASE: Round 1 — Opening Statements (all specialists speak in parallel)
+PHASE: Round 1 — Opening Statements
 
 {STANCE_INSTRUCTION}
 
 INSTRUCTIONS:
-1. Deliver a crisp opening statement from your role perspective ({role_of(agent)}).
+1. Deliver a crisp opening statement from your role perspective ({role_of(a)}).
 2. Establish your core position, key concerns, and what you will defend in later rounds.
 3. Keep it concise, impactful, and structured (2 to 4 crisp paragraphs)."""
+
                 messages = []
                 if doc_context:
                     messages.append({"role": "system", "content": doc_context})
+                for turn in conversation_history:
+                    messages.append({"role": "user" if turn.get("is_human") else "assistant", "content": f"[{turn.get('speaker') or turn.get('agent_name')}]: {turn['content']}"})
                 messages.append({
                     "role": "user",
-                    "content": f"It is your turn to speak, {agent['name']} ({role_of(agent)}). Deliver your opening statement."
+                    "content": f"It is your turn to speak, {a['name']} ({role_of(a)}). Deliver your opening statement."
                 })
 
                 reply = ""
                 async for chunk in LLMRouter.chat_stream(
-                    model=agent["model_id"],
+                    model=a["model_id"],
                     messages=messages,
                     system_prompt=system_prompt,
-                    provider=agent.get("model_provider", "ollama"),
-                    temperature=agent.get("temperature", 0.3)
+                    provider=a.get("model_provider", "ollama"),
+                    temperature=a.get("temperature", 0.3)
                 ):
                     if chunk.get("content"):
                         reply += chunk["content"]
-                        await queue.put(("token", agent["id"], chunk["content"]))
+                        yield {"type": "agent_token", "agent_id": a["id"], "content": chunk["content"]}
 
                 stance = parse_stance(reply)
-                await queue.put(("done", agent["id"], stance))
-
-            tasks = [asyncio.create_task(opening_speaker(a)) for a in roster]
-            opening_replies: Dict[str, Dict[str, Any]] = {}
-
-            for a in roster:
-                yield {
-                    "type": "agent_turn_start",
-                    "round": 1,
-                    "agent": {
-                        "id": a["id"], "name": a["name"], "avatar": a["avatar"],
-                        "role": role_of(a), "model": a["model_id"], "is_leader": a["id"] == (leader["id"] if leader else None)
-                    }
-                }
-
-            remaining = len(tasks)
-            while remaining:
-                item = await queue.get()
-                if item[0] == "token":
-                    yield {"type": "agent_token", "agent_id": item[1], "content": item[2]}
-                else:
-                    remaining -= 1
-                    opening_replies[item[1]] = item[2]
-
-            for a in roster:
-                stance = opening_replies[a["id"]]
-                reply = stance["clean"]
                 turn_data = {
                     "round": 1,
                     "agent_id": a["id"],
@@ -207,7 +197,7 @@ INSTRUCTIONS:
                     "role": role_of(a),
                     "model": a["model_id"],
                     "speaker": speaker_tag(a),
-                    "content": reply,
+                    "content": stance["clean"],
                     "stance": {
                         "type": stance["type"],
                         "target": stance["target"],
@@ -216,7 +206,11 @@ INSTRUCTIONS:
                 }
                 conversation_history.append(turn_data)
                 yield {"type": "stance", "agent_id": a["id"], "stance": turn_data["stance"]}
-                yield {"type": "agent_turn_end", "agent_id": a["id"], "full_content": reply}
+                yield {"type": "agent_turn_end", "agent_id": a["id"], "full_content": stance["clean"]}
+
+                await db.execute("UPDATE discussions SET transcript = ? WHERE id = ?;",
+                                 (json.dumps(conversation_history), discussion_id))
+                await db.commit()
 
             score, disagreements = compute_consensus(conversation_history)
             yield {"type": "consensus_update", "score": score, "disagreements": disagreements, "round": 1}
@@ -239,12 +233,21 @@ INSTRUCTIONS:
                     if opponent:
                         opponent_turn = next((t for t in reversed(conversation_history) if t.get("agent_id") == opponent["id"]), None)
 
+                    is_leader = a["id"] == (leader["id"] if leader else None)
                     yield {
                         "type": "agent_turn_start",
                         "round": round_num,
+                        "agent_id": a["id"],
+                        "agent_name": a["name"],
+                        "agent_avatar": a["avatar"],
+                        "role": role_of(a),
+                        "model": a["model_id"],
+                        "target_agent": opponent["name"] if opponent else None,
+                        "target_agent_id": opponent["id"] if opponent else None,
+                        "is_leader": is_leader,
                         "agent": {
                             "id": a["id"], "name": a["name"], "avatar": a["avatar"],
-                            "role": role_of(a), "model": a["model_id"], "is_leader": a["id"] == (leader["id"] if leader else None)
+                            "role": role_of(a), "model": a["model_id"], "is_leader": is_leader
                         }
                     }
 
@@ -254,8 +257,8 @@ INSTRUCTIONS:
                         opp_line = f"Opponent to address: {opponent['name']}. Their position: {opponent_turn['content'][:1200]}\nTheir stance: {opp_stance.get('type', 'NEUTRAL')} — {opp_stance.get('reason', '')}"
                         opponent_brief = opp_line
 
-                    system_prompt = f"""You are {agent['name']}, acting with the specific assigned role of '{role_of(agent)}'.
-Base instructions: {agent['system_prompt']}
+                    system_prompt = f"""You are {a['name']}, acting with the specific assigned role of '{role_of(a)}'.
+Base instructions: {a['system_prompt']}
 
 You are participating in an executive roundtable debate.
 TOPIC: {topic}
@@ -274,19 +277,19 @@ DEBATE INSTRUCTIONS:
                     if doc_context:
                         messages.append({"role": "system", "content": doc_context})
                     for turn in conversation_history:
-                        messages.append({"role": "user" if turn.get("is_human") else "assistant", "content": f"[{turn['speaker']}]: {turn['content']}"})
+                        messages.append({"role": "user" if turn.get("is_human") else "assistant", "content": f"[{turn.get('speaker') or turn.get('agent_name')}]: {turn['content']}"})
                     messages.append({
                         "role": "user",
-                        "content": f"It is your turn to speak, {agent['name']} ({role_of(agent)}). Deliver your Round {round_num} rebuttal."
+                        "content": f"It is your turn to speak, {a['name']} ({role_of(a)}). Deliver your Round {round_num} rebuttal."
                     })
 
                     reply = ""
                     async for chunk in LLMRouter.chat_stream(
-                        model=agent["model_id"],
+                        model=a["model_id"],
                         messages=messages,
                         system_prompt=system_prompt,
-                        provider=agent.get("model_provider", "ollama"),
-                        temperature=agent.get("temperature", 0.3)
+                        provider=a.get("model_provider", "ollama"),
+                        temperature=a.get("temperature", 0.3)
                     ):
                         if chunk.get("content"):
                             reply += chunk["content"]
