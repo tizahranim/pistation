@@ -355,6 +355,7 @@ async def reset_stuck_discussions():
 class DiscussionParticipateRequest(BaseModel):
     message: str
     target_agent_id: Optional[str] = None
+    document_ids: Optional[List[str]] = []
 
 class DiscussionChallengeRequest(BaseModel):
     message: str
@@ -367,7 +368,8 @@ async def participate_discussion_stream(discussion_id: str, req: DiscussionParti
         async for event in MultiAgentOrchestrator.participate_in_discussion(
             discussion_id=discussion_id,
             human_message=req.message,
-            target_agent_id=req.target_agent_id
+            target_agent_id=req.target_agent_id,
+            document_ids=req.document_ids or []
         ):
             yield f"data: {json.dumps(event)}\n\n"
 

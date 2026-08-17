@@ -43,7 +43,16 @@ import {
   BrainCircuit,
   CornerDownRight,
   Pause,
-  StepForward
+  StepForward,
+  Paperclip,
+  Upload,
+  X,
+  Search,
+  Mic,
+  MicOff,
+  FolderOpen,
+  FileCheck,
+  Folder
 } from 'lucide-react';
 
 const DEBATE_TEMPLATES = [
@@ -143,6 +152,12 @@ export default function AgentDebate({
   const [humanGuidance, setHumanGuidance] = useState('');
   const [rounds, setRounds] = useState(2);
 
+  // Modern Document Selector Modal State (Config View)
+  const [showDocModal, setShowDocModal] = useState(false);
+  const [docSearchQuery, setDocSearchQuery] = useState('');
+  const [isUploadingDoc, setIsUploadingDoc] = useState(false);
+  const fileInputRef = useRef(null);
+
   // Debates List & Persistence
   const [discussions, setDiscussions] = useState([]);
   const [activeDiscussionId, setActiveDiscussionId] = useState(null);
@@ -171,8 +186,20 @@ export default function AgentDebate({
   // Human Live Intervention in Chamber
   const [interventionInput, setInterventionInput] = useState('');
   const [targetInterventionAgentId, setTargetInterventionAgentId] = useState('leader');
-  const [challengeModal, setChallengeModal] = useState(null); // { challenger, challenged }
-  const [challengeMsg, setChallengeMsg] = useState('');
+  const [interveneDocIds, setInterveneDocIds] = useState([]);
+  const [showInterveneDocPicker, setShowInterveneDocPicker] = useState(false);
+  const [interveneDocSearch, setInterveneDocSearch] = useState('');
+  const interveneFileInputRef = useRef(null);
+
+  // Voice Dictation (Speech-to-Text) for Intervention
+  const [isListeningIntervene, setIsListeningIntervene] = useState(false);
+  const [isMediaRecordingIntervene, setIsMediaRecordingIntervene] = useState(false);
+  const [recordingSecondsIntervene, setRecordingSecondsIntervene] = useState(0);
+  const [isTranscribingIntervene, setIsTranscribingIntervene] = useState(false);
+  const recognitionRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+  const recordingTimerRef = useRef(null);
 
   // UI feedback & Copy state
   const [copiedSection, setCopiedSection] = useState(null);
@@ -230,10 +257,41 @@ export default function AgentDebate({
     }
   }, [selectedAgentIds]);
 
-  // Cleanup audio on unmount or tab switch
+  // Initialize Speech Recognition for Hands-Free Interventions
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+
+      recognition.onresult = (event) => {
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          transcript += event.results[i][0].transcript;
+        }
+        setInterventionInput(prev => (prev ? prev + ' ' : '') + transcript);
+      };
+
+      recognition.onerror = (event) => {
+        console.error('Speech recognition error in debate intervene:', event.error);
+        setIsListeningIntervene(false);
+      };
+
+      recognition.onend = () => {
+        setIsListeningIntervene(false);
+      };
+
+      recognitionRef.current = recognition;
+    }
+  }, []);
+
+  // Cleanup audio & speech on unmount
   useEffect(() => {
     return () => {
       stopAllAudio();
+      stopInterveneVoiceRecording();
     };
   }, []);
 
@@ -268,6 +326,128 @@ export default function AgentDebate({
     });
   };
 
+  // Voice recording handlers for Supervisor Intervention
+  const startInterveneMediaRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioChunksRef.current = [];
+      const mediaRecorder = new MediaRecorder(stream);
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        stream.getTracks().forEach(track => track.stop());
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        if (audioBlob.size > 100) {
+          setIsTranscribingIntervene(true);
+          const formData = new FormData();
+          formData.append('file', audioBlob, 'recording.webm');
+          try {
+            const res = await fetch('/api/voice/transcribe', {
+              method: 'POST',
+              body: formData
+            });
+            if (res.ok) {
+              const data = await res.json();
+              if (data.text) {
+                setInterventionInput(prev => (prev ? prev + ' ' : '') + data.text);
+              }
+            }
+          } catch (err) {
+            console.error('Transcription request failed:', err);
+          } finally {
+            setIsTranscribingIntervene(false);
+          }
+        }
+      };
+
+      mediaRecorderRef.current = mediaRecorder;
+      mediaRecorder.start();
+      setIsMediaRecordingIntervene(true);
+      setRecordingSecondsIntervene(0);
+      recordingTimerRef.current = setInterval(() => {
+        setRecordingSecondsIntervene(s => s + 1);
+      }, 1000);
+    } catch (err) {
+      console.error('Microphone access failed:', err);
+      alert('Microphone access was blocked. Please grant microphone permissions in your browser.');
+    }
+  };
+
+  const stopInterveneVoiceRecording = () => {
+    if (recognitionRef.current && isListeningIntervene) {
+      recognitionRef.current.stop();
+      setIsListeningIntervene(false);
+    }
+    if (mediaRecorderRef.current && isMediaRecordingIntervene) {
+      mediaRecorderRef.current.stop();
+      setIsMediaRecordingIntervene(false);
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+        recordingTimerRef.current = null;
+      }
+    }
+  };
+
+  const toggleInterveneVoice = () => {
+    stopAllAudio();
+    if (recognitionRef.current) {
+      if (isListeningIntervene) {
+        recognitionRef.current.stop();
+        setIsListeningIntervene(false);
+      } else {
+        try {
+          recognitionRef.current.start();
+          setIsListeningIntervene(true);
+        } catch (e) {
+          console.error('Failed to start SpeechRecognition:', e);
+        }
+      }
+      return;
+    }
+
+    if (isMediaRecordingIntervene) {
+      stopInterveneVoiceRecording();
+    } else {
+      startInterveneMediaRecording();
+    }
+  };
+
+  // Upload local file directly and auto-attach
+  const handleUploadLocalFile = async (e, targetContext = 'config') => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsUploadingDoc(true);
+    try {
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append('file', file);
+        const res = await fetch('/api/documents/upload', {
+          method: 'POST',
+          body: formData
+        });
+        if (res.ok) {
+          const docData = await res.json();
+          if (docData?.id) {
+            if (targetContext === 'config') {
+              setSelectedDocIds(prev => Array.from(new Set([...prev, docData.id])));
+            } else {
+              setInterveneDocIds(prev => Array.from(new Set([...prev, docData.id])));
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Failed to upload file:', err);
+    } finally {
+      setIsUploadingDoc(false);
+      if (e.target) e.target.value = '';
+    }
+  };
+
   // Play natural speech with agent's mapped voice with strict exclusivity
   const speakText = async (text, voiceId, turnIdentifier, agentId) => {
     if (!text || !globalVoiceEnabled) return;
@@ -298,7 +478,7 @@ export default function AgentDebate({
         })
       });
 
-      // If playback was cancelled or changed during fetch, abort
+      // If playback was cancelled during fetch, abort
       if (playbackIdRef.current !== currentPlayId || !globalVoiceEnabled) {
         return;
       }
@@ -633,15 +813,21 @@ export default function AgentDebate({
 
   const handleSendIntervention = async (e) => {
     e.preventDefault();
-    if (!interventionInput.trim() || !activeDiscussionId) return;
+    if ((!interventionInput.trim() && interveneDocIds.length === 0) || !activeDiscussionId) return;
 
-    const msg = interventionInput.trim();
+    const msg = interventionInput.trim() || 'Attached new specifications for analysis.';
+    const attachedIds = [...interveneDocIds];
     setInterventionInput('');
+    setInterveneDocIds([]);
+    setShowInterveneDocPicker(false);
+    stopInterveneVoiceRecording();
+
     setStreamTurns(prev => [...prev, {
       id: `human-${Date.now()}`,
       speaker: 'Human Supervisor',
       content: msg,
-      is_human: true
+      is_human: true,
+      document_ids: attachedIds
     }]);
 
     try {
@@ -651,7 +837,8 @@ export default function AgentDebate({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: msg,
-          target_agent_id: targetId || undefined
+          target_agent_id: targetId || undefined,
+          document_ids: attachedIds
         })
       });
 
@@ -674,12 +861,13 @@ export default function AgentDebate({
               if (!dataStr) continue;
               const event = JSON.parse(dataStr);
               if (event.type === 'agent_turn_start') {
+                const aid = event.agent_id || event.agent?.id;
                 replyObj = {
                   id: `reply-${Date.now()}`,
-                  agent_id: event.agent_id,
-                  agent_name: event.agent_name,
-                  agent_avatar: event.agent_avatar,
-                  role: event.role,
+                  agent_id: aid,
+                  agent_name: event.agent_name || event.agent?.name,
+                  agent_avatar: event.agent_avatar || event.agent?.avatar,
+                  role: event.role || event.agent?.role,
                   content: ''
                 };
                 setCurrentTurn(replyObj);
@@ -764,9 +952,44 @@ export default function AgentDebate({
     return selectedAgentIds.map(id => agents.find(a => a.id === id)).filter(Boolean);
   }, [selectedAgentIds, agents]);
 
+  // Filtered documents for modal search
+  const filteredDocuments = useMemo(() => {
+    if (!docSearchQuery.trim()) return documents;
+    const q = docSearchQuery.toLowerCase();
+    return documents.filter(d => 
+      (d.filename || '').toLowerCase().includes(q) ||
+      (d.file_type || '').toLowerCase().includes(q)
+    );
+  }, [documents, docSearchQuery]);
+
+  const filteredInterveneDocs = useMemo(() => {
+    if (!interveneDocSearch.trim()) return documents;
+    const q = interveneDocSearch.toLowerCase();
+    return documents.filter(d => 
+      (d.filename || '').toLowerCase().includes(q) ||
+      (d.file_type || '').toLowerCase().includes(q)
+    );
+  }, [documents, interveneDocSearch]);
+
   return (
-    <div className="flex-1 flex overflow-hidden bg-[#090b12] text-gray-100 font-sans">
+    <div className="flex-1 flex overflow-hidden bg-[#090b12] text-gray-100 font-sans relative">
       
+      {/* Hidden File Inputs for Direct Manual File Uploads */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        multiple
+        onChange={(e) => handleUploadLocalFile(e, 'config')}
+        className="hidden"
+      />
+      <input
+        type="file"
+        ref={interveneFileInputRef}
+        multiple
+        onChange={(e) => handleUploadLocalFile(e, 'intervene')}
+        className="hidden"
+      />
+
       {/* 1. Left Sidebar: Past Debates & Templates */}
       <div className="w-80 border-r border-card-border/80 bg-[#0d101c] flex flex-col justify-between shrink-0 select-none overflow-hidden">
         
@@ -1087,44 +1310,77 @@ export default function AgentDebate({
               </div>
             </div>
 
-            {/* Step 3: Attached Documents & Rounds */}
+            {/* Step 3: Modern Knowledge Attachments & Rounds */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               
-              {/* Document Attachments */}
-              <div className="md:col-span-2 p-5 rounded-2xl bg-[#0e111d] border border-card-border space-y-3 shadow-md">
-                <label className="text-xs font-bold font-mono uppercase text-purple-400 flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-purple-500/20 text-purple-300 flex items-center justify-center text-[10px]">3</span>
-                  <span>Attach Knowledge & Specs ({selectedDocIds.length})</span>
-                </label>
+              {/* Document Attachments Card */}
+              <div className="md:col-span-2 p-5 rounded-2xl bg-[#0e111d] border border-card-border space-y-3.5 shadow-md flex flex-col justify-between">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold font-mono uppercase text-purple-400 flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-purple-500/20 text-purple-300 flex items-center justify-center text-[10px]">3</span>
+                    <span>Knowledge & Technical Specs ({selectedDocIds.length} Attached)</span>
+                  </label>
 
-                {documents.length === 0 ? (
-                  <div className="p-4 text-center text-gray-500 text-xs font-mono">
-                    No documents uploaded in Document Inventory yet.
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="px-2.5 py-1 rounded-xl bg-[#141828] hover:bg-[#1e233d] border border-card-border text-[11px] font-mono text-gray-300 hover:text-white flex items-center gap-1.5 transition-all cursor-pointer"
+                    >
+                      <Upload className="w-3 h-3 text-purple-400" />
+                      <span>Upload File</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowDocModal(true)}
+                      className="px-3 py-1 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-[11px] font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-md shadow-purple-600/20"
+                    >
+                      <FolderOpen className="w-3.5 h-3.5" />
+                      <span>Browse Library ({documents.length})</span>
+                    </button>
                   </div>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-40 overflow-y-auto">
-                    {documents.map(doc => {
-                      const isAttached = selectedDocIds.includes(doc.id);
+                </div>
+
+                {/* Attached Documents Chips Area */}
+                <div className="min-h-[70px] p-3 rounded-xl bg-[#121526] border border-card-border/80 flex flex-wrap items-center gap-2">
+                  {selectedDocIds.length === 0 ? (
+                    <div className="w-full flex items-center justify-center text-gray-500 text-xs font-mono py-2">
+                      <span>No technical specs attached yet. Click "Browse Library" or "Upload File".</span>
+                    </div>
+                  ) : (
+                    selectedDocIds.map(docId => {
+                      const doc = documents.find(d => d.id === docId);
                       return (
-                        <button
-                          key={doc.id}
-                          onClick={() => {
-                            if (isAttached) setSelectedDocIds(prev => prev.filter(id => id !== doc.id));
-                            else setSelectedDocIds(prev => [...prev, doc.id]);
-                          }}
-                          className={`p-2.5 rounded-xl border text-left text-xs font-mono flex items-center justify-between transition-all cursor-pointer ${
-                            isAttached
-                              ? 'bg-purple-500/20 border-purple-500 text-purple-200 font-bold'
-                              : 'bg-[#121526] border-card-border text-gray-400 hover:border-gray-500'
-                          }`}
+                        <div
+                          key={docId}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-500/15 border border-purple-500/30 text-purple-200 text-xs font-mono shadow-sm group"
                         >
-                          <span className="truncate mr-2">{doc.filename}</span>
-                          <span className="text-[9px] opacity-70">{(doc.size / 1024).toFixed(0)} KB</span>
-                        </button>
+                          <FileText className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                          <span className="truncate max-w-[180px] font-medium">{doc?.filename || docId}</span>
+                          {doc?.size && (
+                            <span className="text-[9px] text-purple-400/80">({(doc.size / 1024).toFixed(0)} KB)</span>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => setSelectedDocIds(prev => prev.filter(id => id !== docId))}
+                            className="hover:text-rose-400 text-purple-400 p-0.5 rounded transition-colors cursor-pointer"
+                            title="Remove attachment"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
                       );
-                    })}
-                  </div>
-                )}
+                    })
+                  )}
+
+                  {isUploadingDoc && (
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-mono animate-pulse">
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Uploading & indexing document...</span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Rounds & Settings */}
@@ -1153,7 +1409,7 @@ export default function AgentDebate({
                 </div>
 
                 <div className="text-[10px] text-gray-400 font-mono space-y-1">
-                  <div>• Round 1: Parallel Opening Statements</div>
+                  <div>• Round 1: Opening Statements</div>
                   <div>• Round 2: Targeted Rebuttals</div>
                   <div>• Final: Executive Synthesis & Verdict</div>
                 </div>
@@ -1457,8 +1713,32 @@ export default function AgentDebate({
               <div ref={streamEndRef} />
             </div>
 
-            {/* Bottom Chamber Intervention Box */}
-            <div className="p-3.5 border-t border-card-border/80 bg-[#0c0e18] shrink-0">
+            {/* Bottom Chamber Intervention Box with Attachments & Voice Dictation */}
+            <div className="p-3.5 border-t border-card-border/80 bg-[#0c0e18] shrink-0 space-y-2 relative">
+              
+              {/* Attached Specs Pills above Intervene Input */}
+              {interveneDocIds.length > 0 && (
+                <div className="flex items-center gap-1.5 flex-wrap px-1">
+                  <span className="text-[10px] font-mono text-purple-400">Attached Specs:</span>
+                  {interveneDocIds.map(docId => {
+                    const doc = documents.find(d => d.id === docId);
+                    return (
+                      <span key={docId} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-500/20 border border-purple-500/30 text-purple-200 text-[11px] font-mono">
+                        <FileText className="w-3 h-3 text-purple-400" />
+                        <span className="truncate max-w-[140px]">{doc?.filename || docId}</span>
+                        <button
+                          type="button"
+                          onClick={() => setInterveneDocIds(prev => prev.filter(id => id !== docId))}
+                          className="hover:text-rose-400 ml-1 cursor-pointer"
+                        >
+                          <X className="w-2.5 h-2.5" />
+                        </button>
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
+
               <form onSubmit={handleSendIntervention} className="flex items-center gap-2">
                 <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-300 text-xs font-mono shrink-0">
                   <User className="w-3.5 h-3.5 text-purple-400" />
@@ -1476,29 +1756,283 @@ export default function AgentDebate({
                   ))}
                 </select>
 
-                <input
-                  type="text"
-                  value={interventionInput}
-                  onChange={(e) => setInterventionInput(e.target.value)}
-                  placeholder="Inject human supervisor guidance, challenge an assumption, or steer discussion..."
-                  className="flex-1 bg-[#141829] border border-card-border rounded-xl px-3.5 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 font-sans"
-                />
+                <div className={`flex-1 relative flex items-center bg-[#141829] border rounded-xl px-3 py-1 transition-all ${
+                  (isListeningIntervene || isMediaRecordingIntervene)
+                    ? 'border-red-500 ring-2 ring-red-500/20'
+                    : 'border-card-border focus-within:border-purple-500'
+                }`}>
+                  <input
+                    type="text"
+                    value={interventionInput}
+                    onChange={(e) => setInterventionInput(e.target.value)}
+                    placeholder={(isListeningIntervene || isMediaRecordingIntervene) ? "Listening to your voice..." : "Inject supervisor guidance, challenge an assumption, or steer discussion..."}
+                    className="flex-1 bg-transparent py-1 text-xs text-white placeholder-gray-500 focus:outline-none font-sans"
+                  />
+
+                  {/* Attachment & Voice Dictation Icons inside Intervene Bar */}
+                  <div className="flex items-center gap-1 ml-2">
+                    
+                    {/* Paperclip Attach Dropdown Trigger */}
+                    <button
+                      type="button"
+                      onClick={() => setShowInterveneDocPicker(!showInterveneDocPicker)}
+                      className={`p-1.5 rounded-lg border text-xs transition-colors cursor-pointer ${
+                        interveneDocIds.length > 0
+                          ? 'bg-purple-500/20 text-purple-300 border-purple-500/40'
+                          : 'border-transparent text-gray-400 hover:text-white hover:bg-white/5'
+                      }`}
+                      title="Attach documents to intervention"
+                    >
+                      <Paperclip className="w-3.5 h-3.5" />
+                    </button>
+
+                    {/* Microphone Dictation Button */}
+                    <button
+                      type="button"
+                      onClick={toggleInterveneVoice}
+                      className={`p-1.5 rounded-lg border text-xs transition-all flex items-center gap-1 cursor-pointer ${
+                        (isListeningIntervene || isMediaRecordingIntervene)
+                          ? 'bg-red-500 text-white border-red-400 shadow-md shadow-red-500/30 animate-pulse font-bold'
+                          : 'border-transparent text-gray-400 hover:text-emerald-400 hover:bg-white/5'
+                      }`}
+                      title={(isListeningIntervene || isMediaRecordingIntervene) ? "Stop Voice Input" : "Voice Input (Speech-to-Text)"}
+                    >
+                      {(isListeningIntervene || isMediaRecordingIntervene) ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                </div>
 
                 <button
                   type="submit"
-                  disabled={!interventionInput.trim()}
+                  disabled={!interventionInput.trim() && interveneDocIds.length === 0}
                   className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs font-mono flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                 >
                   <Send className="w-3.5 h-3.5" />
                   <span>Send</span>
                 </button>
               </form>
+
+              {/* Intervene Document Picker Dropdown Popup */}
+              {showInterveneDocPicker && (
+                <div className="absolute bottom-full right-16 mb-2 w-80 rounded-2xl p-3 z-50 shadow-2xl border border-card-border bg-[#101422] space-y-2 animate-in fade-in">
+                  <div className="flex items-center justify-between pb-1.5 border-b border-card-border/80">
+                    <div className="flex items-center gap-1.5 font-mono text-xs font-bold text-gray-200">
+                      <FolderOpen className="w-3.5 h-3.5 text-purple-400" />
+                      <span>Attach Knowledge Specs</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowInterveneDocPicker(false)}
+                      className="text-gray-400 hover:text-white cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 text-gray-500 absolute left-2.5 top-2.5" />
+                    <input
+                      type="text"
+                      value={interveneDocSearch}
+                      onChange={(e) => setInterveneDocSearch(e.target.value)}
+                      placeholder="Search documents..."
+                      className="w-full bg-[#15192c] border border-card-border/80 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 font-sans"
+                    />
+                  </div>
+
+                  <div className="max-h-48 overflow-y-auto space-y-1 pr-1">
+                    {filteredInterveneDocs.length === 0 ? (
+                      <div className="p-3 text-center text-gray-500 text-xs font-mono">No matching documents found.</div>
+                    ) : (
+                      filteredInterveneDocs.map(doc => {
+                        const isChecked = interveneDocIds.includes(doc.id);
+                        return (
+                          <button
+                            key={doc.id}
+                            type="button"
+                            onClick={() => {
+                              setInterveneDocIds(prev => 
+                                isChecked ? prev.filter(id => id !== doc.id) : [...prev, doc.id]
+                              );
+                            }}
+                            className={`w-full text-left px-2.5 py-1.5 rounded-xl text-xs flex items-center justify-between transition-colors cursor-pointer ${
+                              isChecked
+                                ? 'bg-purple-500/20 text-purple-200 font-medium border border-purple-500/40'
+                                : 'hover:bg-[#161a2c] text-gray-300'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 truncate mr-2 font-mono text-[11px]">
+                              <FileText className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                              <span className="truncate">{doc.filename}</span>
+                            </div>
+                            {isChecked && <Check className="w-3.5 h-3.5 text-purple-400 shrink-0" />}
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  <div className="pt-2 border-t border-card-border/80 flex items-center justify-between">
+                    <button
+                      type="button"
+                      onClick={() => interveneFileInputRef.current?.click()}
+                      className="text-[10px] font-mono text-purple-400 hover:text-purple-300 flex items-center gap-1 cursor-pointer"
+                    >
+                      <Upload className="w-3 h-3" />
+                      <span>Upload local file</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowInterveneDocPicker(false)}
+                      className="px-3 py-1 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-[10px] font-mono font-bold transition-all shadow cursor-pointer"
+                    >
+                      Done ({interveneDocIds.length})
+                    </button>
+                  </div>
+                </div>
+              )}
+
             </div>
 
           </div>
         )}
 
       </div>
+
+      {/* =========================================================================
+          MODAL: KNOWLEDGE LIBRARY SELECTOR (Config View - Scales for 100+ Docs)
+         ========================================================================= */}
+      {showDocModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in">
+          <div className="w-full max-w-2xl bg-[#0e1220] border border-card-border rounded-3xl p-6 shadow-2xl space-y-4 flex flex-col max-h-[85vh]">
+            
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-card-border">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-400">
+                  <FolderOpen className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm text-white font-mono">Knowledge & Technical Document Inventory</h3>
+                  <p className="text-[10px] text-gray-400">Select specifications, RFCs, and codebases to ground agent arguments.</p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowDocModal(false)}
+                className="p-1.5 rounded-xl hover:bg-white/10 text-gray-400 hover:text-white transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Search & Actions Bar */}
+            <div className="flex items-center gap-3">
+              <div className="flex-1 relative">
+                <Search className="w-4 h-4 text-gray-500 absolute left-3 top-2.5" />
+                <input
+                  type="text"
+                  value={docSearchQuery}
+                  onChange={(e) => setDocSearchQuery(e.target.value)}
+                  placeholder={`Search across ${documents.length} technical documents...`}
+                  className="w-full bg-[#131728] border border-card-border rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 font-sans"
+                />
+              </div>
+
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="px-3 py-2 rounded-xl bg-[#141829] hover:bg-[#1e233d] border border-card-border text-xs font-mono text-gray-300 hover:text-white flex items-center gap-1.5 transition-all cursor-pointer shrink-0"
+              >
+                <Upload className="w-3.5 h-3.5 text-purple-400" />
+                <span>Upload New</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  if (selectedDocIds.length === documents.length) {
+                    setSelectedDocIds([]);
+                  } else {
+                    setSelectedDocIds(documents.map(d => d.id));
+                  }
+                }}
+                className="px-3 py-2 rounded-xl bg-[#141829] hover:bg-[#1e233d] border border-card-border text-xs font-mono text-gray-300 hover:text-white transition-all cursor-pointer shrink-0"
+              >
+                {selectedDocIds.length === documents.length ? 'Clear All' : 'Select All'}
+              </button>
+            </div>
+
+            {/* Scrollable Document Grid */}
+            <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+              {filteredDocuments.length === 0 ? (
+                <div className="p-8 text-center text-gray-500 text-xs font-mono border border-dashed border-card-border rounded-2xl">
+                  No technical documents match "{docSearchQuery}". Upload a file to add it to your library.
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {filteredDocuments.map(doc => {
+                    const isSelected = selectedDocIds.includes(doc.id);
+                    return (
+                      <button
+                        key={doc.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedDocIds(prev => 
+                            isSelected ? prev.filter(id => id !== doc.id) : [...prev, doc.id]
+                          );
+                        }}
+                        className={`p-3 rounded-2xl border text-left flex items-center justify-between transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-purple-500/20 border-purple-500 text-purple-200 font-bold shadow-md shadow-purple-500/10'
+                            : 'bg-[#121526] border-card-border/80 text-gray-300 hover:bg-[#181d32] hover:border-gray-600'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 truncate mr-2">
+                          <div className={`p-2 rounded-xl border shrink-0 ${
+                            isSelected ? 'bg-purple-500/30 border-purple-500/50 text-purple-200' : 'bg-[#0e111d] border-card-border text-gray-400'
+                          }`}>
+                            <FileText className="w-4 h-4" />
+                          </div>
+                          <div className="truncate">
+                            <div className="font-mono text-xs truncate">{doc.filename}</div>
+                            <div className="text-[10px] text-gray-500 font-mono">
+                              {doc.size ? `${(doc.size / 1024).toFixed(0)} KB` : 'Document'} • {doc.file_type || 'spec'}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className={`w-5 h-5 rounded-lg border flex items-center justify-center shrink-0 ${
+                          isSelected ? 'bg-purple-600 border-purple-500 text-white' : 'border-card-border bg-[#0d101c]'
+                        }`}>
+                          {isSelected && <Check className="w-3 h-3" />}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="pt-3 border-t border-card-border flex items-center justify-between">
+              <span className="text-xs font-mono text-gray-400">
+                <strong className="text-white">{selectedDocIds.length}</strong> of {documents.length} documents attached to debate
+              </span>
+
+              <button
+                type="button"
+                onClick={() => setShowDocModal(false)}
+                className="px-6 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:brightness-110 text-white font-bold text-xs font-mono transition-all shadow-lg shadow-purple-600/20 cursor-pointer"
+              >
+                Confirm Selection
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
 
     </div>
   );

@@ -405,7 +405,8 @@ Keep the entire synthesis tight and executive-grade."""
     async def participate_in_discussion(
         discussion_id: str,
         human_message: str,
-        target_agent_id: Optional[str] = None
+        target_agent_id: Optional[str] = None,
+        document_ids: List[str] = []
     ) -> AsyncGenerator[Dict[str, Any], None]:
         db = await get_db()
         try:
@@ -421,6 +422,24 @@ Keep the entire synthesis tight and executive-grade."""
                 transcript = json.loads(disc.get("transcript") or "[]")
             except Exception:
                 transcript = []
+
+            # Load any attached documents
+            doc_context = ""
+            if document_ids:
+                placeholders_doc = ",".join("?" for _ in document_ids)
+                cursor = await db.execute(f"SELECT id, filename, file_path FROM documents WHERE id IN ({placeholders_doc});", tuple(document_ids))
+                doc_rows = await cursor.fetchall()
+                excerpts = []
+                import os
+                for d in doc_rows:
+                    if os.path.exists(d["file_path"]):
+                        try:
+                            with open(d["file_path"], "r", errors="ignore") as f:
+                                excerpts.append(f"[{d['filename']}]:\n{f.read(10000)}")
+                        except Exception:
+                            pass
+                if excerpts:
+                    doc_context = "\n=== RELEVANT NEWLY ATTACHED DOCUMENTS ===\n" + "\n\n".join(excerpts) + "\n=========================================\n"
 
             human_turn = {
                 "speaker": "Human Supervisor",
@@ -462,10 +481,12 @@ The Human Supervisor has just intervened with a direct question/instruction:
 
 INSTRUCTIONS:
 1. Address the Human Supervisor directly, respectfully, and decisively.
-2. Incorporate the supervisor's guidance into the team's ongoing debate context.
+2. Incorporate the supervisor's guidance and any attached specs into the team's ongoing debate context.
 3. If you are the Leader, give executive clarity or direct your specialists accordingly."""
 
             messages = []
+            if doc_context:
+                messages.append({"role": "system", "content": doc_context})
             for turn in transcript[:-1]:
                 speaker = turn.get("speaker") or turn.get("agent_name") or "Participant"
                 messages.append({"role": "user" if turn.get("is_human") else "assistant", "content": f"[{speaker}]: {turn['content']}"})
@@ -474,6 +495,12 @@ INSTRUCTIONS:
 
             yield {
                 "type": "agent_turn_start",
+                "agent_id": agent["id"],
+                "agent_name": agent["name"],
+                "agent_avatar": agent["avatar"],
+                "role": assigned_role,
+                "model": agent["model_id"],
+                "is_leader": is_leader,
                 "agent": {
                     "id": agent["id"], "name": agent["name"], "avatar": agent["avatar"],
                     "role": assigned_role, "model": agent["model_id"], "is_leader": is_leader
