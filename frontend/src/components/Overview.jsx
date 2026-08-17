@@ -335,10 +335,21 @@ export default function Overview({
   const ramTotalGb = formatGb(telemetry?.ram?.total_mb) || '31.2';
   const ramUsedGb = formatGb(telemetry?.ram?.used_mb) || '8.2';
   const diskFreeGb = telemetry?.disk?.free_gb != null ? telemetry.disk.free_gb : 369.1;
-  const gpuNames = [...new Set((telemetry?.gpus || []).map(g => (g.name || '').replace(/NVIDIA GeForce /i, '').trim()))];
+  const gpusList = telemetry?.gpus || [];
+  const gpuNames = [...new Set(gpusList.map(g => (g.name || '').replace(/NVIDIA GeForce /i, '').trim()))];
+  const gpuCount = gpusList.length || 2;
   const gpuLabel = gpuNames.length > 1
-    ? `${gpuNames.length}× ${gpuNames[0]}`
-    : (gpuNames[0] || 'RTX 5070');
+    ? `${gpuCount}× ${gpuNames[0]}`
+    : (gpuCount > 1 ? `Dual ${gpuNames[0] || 'RTX 5070'}` : (gpuNames[0] || 'RTX 5070'));
+  
+  const totalGpuVramUsedMb = gpusList.reduce((acc, g) => acc + (g.vram_used_mb || 0), 0);
+  const totalGpuVramTotalMb = gpusList.reduce((acc, g) => acc + (g.vram_total_mb || 0), 0) || 24576;
+  const totalGpuVramUsedGb = (totalGpuVramUsedMb / 1024).toFixed(1);
+  const totalGpuVramTotalGb = (totalGpuVramTotalMb / 1024).toFixed(0);
+  const gpuMaxTemp = gpusList.length > 0 ? Math.max(...gpusList.map(g => g.temperature_c || 0)) : 44;
+  const cpuPercentVal = Math.round(telemetry?.cpu?.percent ?? 5);
+  const ramPercentVal = Math.round(telemetry?.ram?.percent ?? 18);
+  const diskPercentVal = Math.round(telemetry?.disk?.percent ?? 22);
 
   // All 9 Station Shortcuts (excluding Overview)
   const shortcuts = [
@@ -477,44 +488,109 @@ export default function Overview({
             </div>
           </div>
 
-          {/* Right: Compact System Overview Matrix (OS, CPU, RAM, GPU, {t('overview.storage', 'Storage')}) */}
+          {/* Right: Modern Telemetry Matrix with Micro-Gauges & Click-to-Inspect */}
           <div className="flex flex-wrap items-center gap-2 shrink-0">
-            <div className="px-2.5 py-1 rounded-xl bg-white/5 border border-white/10 flex items-center gap-1.5 shadow-sm" title={`${telemetry?.os?.name || 'Linux'} ${telemetry?.os?.release || ''}`}>
-              <Server className="w-3.5 h-3.5 text-cyan-400" />
-              <span className="text-[10px] font-mono font-bold text-gray-200">{telemetry?.os?.distro || 'Linux'}</span>
-              <span className="text-[9px] font-mono text-gray-500">{telemetry?.os?.machine || 'x86_64'}</span>
-            </div>
+            {/* Host OS Pill */}
+            <button
+              type="button"
+              onClick={() => setActiveTab('resources')}
+              className="px-2.5 py-1.5 rounded-xl bg-[#131728]/80 hover:bg-[#1c223c] border border-cyan-500/20 hover:border-cyan-500/40 flex items-center gap-2 transition-all shadow-sm cursor-pointer group"
+              title={isRTL ? "نظام التشغيل ومواصفات العتاد" : `${telemetry?.os?.name || 'Fedora'} ${telemetry?.os?.release || '44'} (COSMIC)`}
+            >
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                <Server className="w-3.5 h-3.5 text-cyan-400 group-hover:scale-110 transition-transform" />
+              </div>
+              <div className="text-left font-mono">
+                <span className="text-[10px] font-bold text-gray-200 block leading-none">{telemetry?.os?.distro || 'Fedora 44'}</span>
+                <span className="text-[8px] text-gray-400 leading-none">COSMIC</span>
+              </div>
+            </button>
 
-            <div className="px-2.5 py-1 rounded-xl bg-white/5 border border-white/10 flex items-center gap-1.5 shadow-sm" title={telemetry?.cpu?.model || 'CPU'}>
-              <Cpu className="w-3.5 h-3.5 text-emerald-400" />
-              <span className="text-[10px] font-mono font-bold text-gray-200">{telemetry?.cpu?.logical_cores || 28} {isRTL ? 'أنوية' : 'Cores'}</span>
-              {telemetry?.cpu?.percent != null && (
-                <span className="text-[9px] font-mono text-emerald-300">{telemetry.cpu.percent}%</span>
-              )}
-            </div>
+            {/* CPU Cores & Micro-Gauge */}
+            <button
+              type="button"
+              onClick={() => setActiveTab('resources')}
+              className="px-2.5 py-1.5 rounded-xl bg-[#131728]/80 hover:bg-[#1c223c] border border-emerald-500/20 hover:border-emerald-500/40 flex items-center gap-2 transition-all shadow-sm cursor-pointer group"
+              title={isRTL ? "مراقبة المعالج والحمولة" : `CPU: ${telemetry?.cpu?.logical_cores || 28} Cores @ ${cpuPercentVal}% load`}
+            >
+              <Cpu className="w-3.5 h-3.5 text-emerald-400 group-hover:scale-110 transition-transform" />
+              <div className="text-left font-mono">
+                <div className="flex items-center justify-between gap-1.5 text-[10px] font-bold text-gray-200 leading-none">
+                  <span>{telemetry?.cpu?.logical_cores || 28} {isRTL ? 'أنوية' : 'Cores'}</span>
+                  <span className={cpuPercentVal > 75 ? 'text-red-400' : (cpuPercentVal > 40 ? 'text-amber-400' : 'text-emerald-300')}>{cpuPercentVal}%</span>
+                </div>
+                <div className="w-12 bg-black/40 h-1 rounded-full overflow-hidden mt-1 border border-white/5">
+                  <div
+                    className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-300"
+                    style={{ width: `${Math.min(100, Math.max(5, cpuPercentVal))}%` }}
+                  />
+                </div>
+              </div>
+            </button>
 
-            <div className="px-2.5 py-1 rounded-xl bg-white/5 border border-white/10 flex items-center gap-1.5 shadow-sm" title="System RAM">
-              <MemoryStick className="w-3.5 h-3.5 text-purple-400" />
-              <span className="text-[10px] font-mono font-bold text-gray-200">
-                {ramUsedGb} / {ramTotalGb} GB
-              </span>
-              {telemetry?.ram?.percent != null && (
-                <span className="text-[9px] font-mono text-purple-300">{telemetry.ram.percent}%</span>
-              )}
-            </div>
+            {/* System RAM & Micro-Gauge */}
+            <button
+              type="button"
+              onClick={() => setActiveTab('resources')}
+              className="px-2.5 py-1.5 rounded-xl bg-[#131728]/80 hover:bg-[#1c223c] border border-purple-500/20 hover:border-purple-500/40 flex items-center gap-2 transition-all shadow-sm cursor-pointer group"
+              title={isRTL ? "استهلاك الذاكرة العشوائية RAM" : `RAM: ${ramUsedGb} / ${ramTotalGb} GB (${ramPercentVal}%)`}
+            >
+              <MemoryStick className="w-3.5 h-3.5 text-purple-400 group-hover:scale-110 transition-transform" />
+              <div className="text-left font-mono">
+                <div className="flex items-center justify-between gap-1.5 text-[10px] font-bold text-gray-200 leading-none">
+                  <span>{ramUsedGb} / {ramTotalGb} GB</span>
+                  <span className="text-purple-300 text-[9px]">{ramPercentVal}%</span>
+                </div>
+                <div className="w-12 bg-black/40 h-1 rounded-full overflow-hidden mt-1 border border-white/5">
+                  <div
+                    className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-300"
+                    style={{ width: `${Math.min(100, Math.max(5, ramPercentVal))}%` }}
+                  />
+                </div>
+              </div>
+            </button>
 
-            <div className="px-2.5 py-1 rounded-xl bg-white/5 border border-white/10 flex items-center gap-1.5 shadow-sm" title="Graphics Hardware">
-              <Zap className="w-3.5 h-3.5 text-amber-400" />
-              <span className="text-[10px] font-mono font-bold text-gray-200">{gpuLabel}</span>
-            </div>
+            {/* Dual GPU & VRAM Live Telemetry */}
+            <button
+              type="button"
+              onClick={() => setActiveTab('resources')}
+              className="px-2.5 py-1.5 rounded-xl bg-[#131728]/80 hover:bg-[#1c223c] border border-amber-500/20 hover:border-amber-500/40 flex items-center gap-2 transition-all shadow-sm cursor-pointer group"
+              title={isRTL ? "كروت الشاشة وذاكرة VRAM والحرارة" : `Dual RTX 5070: ${(totalGpuVramUsedMb / 1024).toFixed(1)} / ${totalGpuVramTotalGb} GB VRAM • ${gpuMaxTemp}°C`}
+            >
+              <Zap className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform" />
+              <div className="text-left font-mono">
+                <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-200 leading-none">
+                  <span>{gpuLabel}</span>
+                  <span className="text-amber-300 text-[9px]">{gpuMaxTemp}°C</span>
+                </div>
+                <div className="text-[8px] text-gray-400 mt-0.5 leading-none">
+                  {totalGpuVramUsedGb} / {totalGpuVramTotalGb} GB VRAM
+                </div>
+              </div>
+            </button>
 
-            <div className="px-2.5 py-1 rounded-xl bg-white/5 border border-white/10 flex items-center gap-1.5 shadow-sm" title="Root {t('overview.storage', 'Storage')}">
-              <HardDrive className="w-3.5 h-3.5 text-indigo-400" />
-              <span className="text-[10px] font-mono font-bold text-gray-200">{diskFreeGb} {isRTL ? 'جيجابايت متاح' : 'GB Free'}</span>
-              {telemetry?.disk?.total_gb != null && (
-                <span className="text-[9px] font-mono text-indigo-300">{telemetry.disk.used_gb} / {telemetry.disk.total_gb} GB</span>
-              )}
-            </div>
+            {/* Storage Drive & Micro-Gauge */}
+            <button
+              type="button"
+              onClick={() => setActiveTab('resources')}
+              className="px-2.5 py-1.5 rounded-xl bg-[#131728]/80 hover:bg-[#1c223c] border border-indigo-500/20 hover:border-indigo-500/40 flex items-center gap-2 transition-all shadow-sm cursor-pointer group"
+              title={isRTL ? "مساحة التخزين المستهلكة والمتبقية" : `Storage: ${diskFreeGb} GB Free (${diskPercentVal}% used)`}
+            >
+              <HardDrive className="w-3.5 h-3.5 text-indigo-400 group-hover:scale-110 transition-transform" />
+              <div className="text-left font-mono">
+                <div className="flex items-center justify-between gap-1.5 text-[10px] font-bold text-gray-200 leading-none">
+                  <span>{diskFreeGb} {isRTL ? 'متاح' : 'Free'}</span>
+                  <span className="text-indigo-300 text-[9px]">{diskPercentVal}%</span>
+                </div>
+                <div className="w-12 bg-black/40 h-1 rounded-full overflow-hidden mt-1 border border-white/5">
+                  <div
+                    className="h-full bg-gradient-to-r from-indigo-500 to-cyan-400 rounded-full transition-all duration-300"
+                    style={{ width: `${Math.min(100, Math.max(5, diskPercentVal))}%` }}
+                  />
+                </div>
+              </div>
+            </button>
           </div>
         </div>
       </div>
