@@ -170,10 +170,10 @@ export default function DocumentInventory({ documents = [], onRefreshDocs }) {
         <div>
           <h2 className="text-sm font-bold text-gray-100 flex items-center gap-2 font-mono">
             <Database className="w-4 h-4 text-indigo-400" />
-            <span>Universal Knowledge Library</span>
+            <span>{isRTL ? 'مكتبة المعرفة والمستندات الشاملة' : 'Universal Knowledge Library'}</span>
           </h2>
           <p className="text-[11px] text-gray-400 mt-0.5 font-sans">
-            Universal repository supporting PDFs, Word documents, CSV/Excel data, source code, JSON, Markdown, and media assets.
+            {isRTL ? 'مستودع شامل يدعم ملفات PDF، ومستندات Word، وجداول CSV/Excel، والأكواد البرمجية، وJSON، وملفات Markdown، والوسائط.' : 'Universal repository supporting PDFs, Word documents, CSV/Excel data, source code, JSON, Markdown, and media assets.'}
           </p>
         </div>
 
@@ -191,13 +191,13 @@ export default function DocumentInventory({ documents = [], onRefreshDocs }) {
             className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold font-mono flex items-center gap-1.5 shadow disabled:opacity-50 transition-all"
           >
             {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
-            <span>{uploading ? 'Parsing & Ingesting...' : 'Add to Library'}</span>
+            <span>{uploading ? (isRTL ? 'جاري التحليل والفهرسة...' : 'Parsing & Ingesting...') : (isRTL ? 'إضافة إلى المكتبة' : 'Add to Library')}</span>
           </button>
 
           <button
             onClick={onRefreshDocs}
             className="p-1.5 rounded-lg border border-card-border hover:bg-[#151928] text-gray-400 hover:text-gray-200"
-            title="Refresh Library"
+            title={isRTL ? "تحديث المكتبة" : "Refresh Library"}
           >
             <RefreshCw className="w-3.5 h-3.5" />
           </button>
@@ -214,7 +214,7 @@ export default function DocumentInventory({ documents = [], onRefreshDocs }) {
               <Search className="w-3.5 h-3.5 text-gray-500 absolute left-2.5 top-2.5" />
               <input
                 type="text"
-                placeholder="Search library..."
+                placeholder={isRTL ? "...البحث في المكتبة" : "Search library..."}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full bg-[#151824] border border-card-border rounded-lg pl-8 pr-3 py-1.5 text-xs text-gray-100 placeholder:text-gray-500 focus:outline-none focus:border-indigo-500 font-mono"
@@ -246,8 +246,8 @@ export default function DocumentInventory({ documents = [], onRefreshDocs }) {
             </div>
 
             <div className="text-[10px] font-mono text-gray-400 flex items-center justify-between pt-1">
-              <span>{filteredDocs.length} ASSETS ({totalChunksCount} CHUNKS)</span>
-              <span className="text-emerald-400">● AI Ready</span>
+              <span>{isRTL ? `${filteredDocs.length} ملفات (${totalChunksCount} مقطع)` : `${filteredDocs.length} ASSETS (${totalChunksCount} CHUNKS)`}</span>
+              <span className="text-emerald-400">{isRTL ? "● جاهزة للذكاء الاصطناعي" : "● AI Ready"}</span>
             </div>
           </div>
 
@@ -255,12 +255,12 @@ export default function DocumentInventory({ documents = [], onRefreshDocs }) {
             {filteredDocs.length === 0 ? (
               <div className="text-center py-10 px-4 text-xs text-gray-500 space-y-2">
                 <FileText className="w-8 h-8 text-gray-600 mx-auto" />
-                <p>No documents found.</p>
+                <p>{isRTL ? "لا توجد مستندات." : "No documents found."}</p>
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   className="text-indigo-400 hover:underline font-mono text-[11px]"
                 >
-                  + Upload your first file
+                  {isRTL ? '+ ارفع ملفك الأول' : '+ Upload your first file'}
                 </button>
               </div>
             ) : (
@@ -286,7 +286,7 @@ export default function DocumentInventory({ documents = [], onRefreshDocs }) {
                           <div className="text-[10px] font-mono text-gray-500 flex items-center gap-2 mt-0.5">
                             <span>{Math.round((doc.file_size || 0) / 1024)} KB</span>
                             <span>•</span>
-                            <span>{doc.chunk_count || 1} chunks</span>
+                            <span>{doc.chunk_count || 1} {isRTL ? 'مقاطع' : 'chunks'}</span>
                           </div>
                         </div>
                       </div>
@@ -320,15 +320,15 @@ export default function DocumentInventory({ documents = [], onRefreshDocs }) {
                     <h3 className="text-sm font-bold text-gray-100 font-mono flex items-center gap-2">
                       <span>{docDetail.filename}</span>
                       <span className="px-2 py-0.5 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-[10px] text-indigo-300 font-mono">
-                        {docDetail.chunk_count || 1} Indexed Chunks
+                        {docDetail.chunk_count || 1} {isRTL ? 'مقاطع مفهرسة' : 'Indexed Chunks'}
                       </span>
                     </h3>
                     <div className="text-[10px] font-mono text-gray-500 flex items-center gap-3 mt-0.5">
-                      <span>Size: {Math.round((docDetail.file_size || 0) / 1024)} KB</span>
+                      <span>{isRTL ? 'الحجم:' : 'Size:'} {Math.round((docDetail.file_size || 0) / 1024)} KB</span>
                       <span>•</span>
-                      <span>Uploaded: {new Date(docDetail.created_at).toLocaleString()}</span>
+                      <span>{isRTL ? 'تاريخ الرفع:' : 'Uploaded:'} {new Date(docDetail.created_at).toLocaleString()}</span>
                       <span>•</span>
-                      <span className="text-emerald-400">Status: Parsed & Ready</span>
+                      <span className="text-emerald-400">{isRTL ? "الحالة: تم التحليل وجاهز" : "Status: Parsed & Ready"}</span>
                     </div>
                   </div>
                 </div>
@@ -340,7 +340,7 @@ export default function DocumentInventory({ documents = [], onRefreshDocs }) {
                     className="px-3 py-1.5 rounded-lg border border-card-border hover:bg-[#181c2b] text-gray-200 text-xs font-mono flex items-center gap-1.5 transition-colors"
                   >
                     <Download className="w-3.5 h-3.5 text-indigo-400" />
-                    <span>Download File</span>
+                    <span>{isRTL ? 'تنزيل الملف' : 'Download File'}</span>
                   </a>
 
                   <button
@@ -364,7 +364,7 @@ export default function DocumentInventory({ documents = [], onRefreshDocs }) {
                   }`}
                 >
                   <Eye className="w-3.5 h-3.5" />
-                  <span>Document Text Preview</span>
+                  <span>{isRTL ? 'معاينة نص المستند' : 'Document Text Preview'}</span>
                 </button>
 
                 <button
@@ -376,7 +376,7 @@ export default function DocumentInventory({ documents = [], onRefreshDocs }) {
                   }`}
                 >
                   <Layers className="w-3.5 h-3.5" />
-                  <span>Parsed RAG Chunks ({docDetail.chunks?.length || docDetail.chunk_count || 0})</span>
+                  <span>{isRTL ? `مقاطع RAG المفهرسة (${docDetail.chunks?.length || docDetail.chunk_count || 0})` : `Parsed RAG Chunks (${docDetail.chunks?.length || docDetail.chunk_count || 0})`}</span>
                 </button>
 
                 <button
@@ -388,7 +388,7 @@ export default function DocumentInventory({ documents = [], onRefreshDocs }) {
                   }`}
                 >
                   <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Test Semantic RAG Search</span>
+                  <span>{isRTL ? 'اختبار البحث الدلالي الذكي' : 'Test Semantic RAG Search'}</span>
                 </button>
               </div>
 
@@ -429,10 +429,10 @@ export default function DocumentInventory({ documents = [], onRefreshDocs }) {
                     <div className="p-3 rounded-xl bg-[#141824] border border-card-border text-xs text-gray-300 space-y-1">
                       <div className="font-bold text-indigo-300 font-mono flex items-center gap-1.5">
                         <Zap className="w-3.5 h-3.5 text-amber-400" />
-                        <span>Interactive Vector & Semantic Retrieval Tester</span>
+                        <span>{isRTL ? 'أداة الاختبار التفاعلية للاسترجاع المتجهي والدلالي' : 'Interactive Vector & Semantic Retrieval Tester'}</span>
                       </div>
                       <p className="text-[11px] text-gray-400">
-                        Type any question or keyword below to test which specific chunks from <b>{docDetail.filename}</b> will be retrieved and injected into agent prompts.
+                        {isRTL ? `اكتب أي سؤال أو كلمة مفتاحية لاختبار أي المقاطع المحددة من ${docDetail.filename} سيتم استرجاعها وتزويد الوكلاء بها.` : `Type any question or keyword below to test which specific chunks from ${docDetail.filename} will be retrieved and injected into agent prompts.`}
                       </p>
                     </div>
 
@@ -441,7 +441,7 @@ export default function DocumentInventory({ documents = [], onRefreshDocs }) {
                         type="text"
                         value={ragQuery}
                         onChange={(e) => setRagQuery(e.target.value)}
-                        placeholder="e.g. What is the main finding regarding performance?..."
+                        placeholder={isRTL ? "...مثال: ما هي أهم النقاط المتعلقة بالأداء؟" : "e.g. What is the main finding regarding performance?..."}
                         className="flex-1 bg-[#151928] border border-card-border rounded-xl px-3.5 py-2.5 text-xs text-gray-100 placeholder:text-gray-500 focus:outline-none focus:border-indigo-500 font-sans"
                       />
                       <button
@@ -450,14 +450,14 @@ export default function DocumentInventory({ documents = [], onRefreshDocs }) {
                         className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-mono font-bold flex items-center gap-1.5 disabled:opacity-50 shadow"
                       >
                         {isSearchingRag ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
-                        <span>Search Chunks</span>
+                        <span>{isRTL ? 'بحث في المقاطع' : 'Search Chunks'}</span>
                       </button>
                     </form>
 
                     {ragResults.length > 0 && (
                       <div className="space-y-3 pt-2">
                         <div className="text-xs font-mono font-bold text-emerald-400">
-                          MATCHED {ragResults.length} RELEVANT CHUNKS:
+                          {isRTL ? `تم العثور على ${ragResults.length} مقاطع مطابقة:` : `MATCHED ${ragResults.length} RELEVANT CHUNKS:`}
                         </div>
                         {ragResults.map((res, i) => (
                           <div key={i} className="p-3.5 rounded-xl bg-[#0d0f17] border border-emerald-500/30 space-y-1">
@@ -479,8 +479,8 @@ export default function DocumentInventory({ documents = [], onRefreshDocs }) {
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center text-center p-6 text-gray-500 space-y-2">
               <FileText className="w-12 h-12 text-gray-600" />
-              <h4 className="text-sm font-semibold text-gray-300">No document selected</h4>
-              <p className="text-xs max-w-sm">Select any document from the inventory on the left to inspect its raw text, chunks, and test RAG retrieval.</p>
+              <h4 className="text-sm font-semibold text-gray-300">{isRTL ? "لم يتم اختيار مستند" : "No document selected"}</h4>
+              <p className="text-xs max-w-sm">{isRTL ? "اختر أي مستند من القائمة الجانبية لمعاينة نصه، ومقاطعه المفهرسة، واختبار استرجاع RAG." : "Select any document from the inventory on the left to inspect its raw text, chunks, and test RAG retrieval."}</p>
             </div>
           )}
         </div>

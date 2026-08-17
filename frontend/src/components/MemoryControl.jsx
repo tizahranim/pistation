@@ -30,11 +30,11 @@ import {
 } from 'lucide-react';
 
 const CATEGORIES = [
-  { id: 'all', label: 'All Memories', color: 'emerald', icon: BrainCircuit },
-  { id: 'user_profile', label: 'User & Identity', color: 'purple', icon: User },
-  { id: 'preference', label: 'Preferences & Style', color: 'cyan', icon: Sliders },
-  { id: 'project_rule', label: 'Project Rules & Stack', color: 'amber', icon: Code },
-  { id: 'knowledge', label: 'Knowledge & Docs', color: 'emerald', icon: BookOpen },
+  { id: 'all', label: 'جميع الذكريات', labelEn: 'All Memories', color: 'emerald', icon: BrainCircuit },
+  { id: 'user_profile', label: 'المستخدم والهوية', labelEn: 'User & Identity', color: 'purple', icon: User },
+  { id: 'preference', label: 'التفضيلات والأسلوب', labelEn: 'Preferences & Style', color: 'cyan', icon: Sliders },
+  { id: 'project_rule', label: 'قواعد المشروع والبنية', labelEn: 'Project Rules & Stack', color: 'amber', icon: Code },
+  { id: 'knowledge', label: 'المعرفة والمستندات', labelEn: 'Knowledge & Docs', color: 'emerald', icon: BookOpen },
 ];
 
 export default function MemoryControl() {
@@ -459,9 +459,9 @@ export default function MemoryControl() {
 
           <div className="space-y-1.5">
             {[
-              { id: 'facts', label: 'Long-Term Memory Facts', icon: BrainCircuit, count: facts.length, color: 'emerald' },
-              { id: 'rules', label: 'Global Rules (AGENTS.md)', icon: FileText, count: rules.length, color: 'cyan' },
-              { id: 'sessions', label: 'Pi Session Archives', icon: History, count: sessions.length, color: 'amber' },
+              { id: 'facts', label: isRTL ? 'حقائق الذاكرة طويلة المدى' : 'Long-Term Memory Facts', icon: BrainCircuit, count: facts.length, color: 'emerald' },
+              { id: 'rules', label: isRTL ? 'القواعد العامة (AGENTS.md)' : 'Global Rules (AGENTS.md)', icon: FileText, count: rules.length, color: 'cyan' },
+              { id: 'sessions', label: isRTL ? 'أرشيف جلسات Pi' : 'Pi Session Archives', icon: History, count: sessions.length, color: 'amber' },
             ].map(tab => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -496,14 +496,14 @@ export default function MemoryControl() {
         <div className="p-3.5 rounded-2xl bg-gradient-to-b from-[#121626] to-[#0d101a] border border-emerald-500/20 text-xs text-gray-400 space-y-2">
           <div className="font-bold text-gray-200 flex items-center gap-1.5 font-mono text-[11px]">
             <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Autonomous Context</span>
+            <span>{isRTL ? 'السياق التلقائي المستمر' : 'Autonomous Context'}</span>
           </div>
           <p className="text-[10px] text-gray-400 leading-relaxed">
-            All stored memory facts, pinned preferences, and rules are injected live into every model & agent conversation.
+            {isRTL ? 'جميع حقائق الذاكرة المحفوظة والتفضيلات والقواعد يتم تزويدها تلقائياً لكل وكيل ونموذج في المحادثات.' : 'All stored memory facts, pinned preferences, and rules are injected live into every model & agent conversation.'}
           </p>
           <div className="pt-1 flex items-center gap-1.5 text-[10px] font-mono text-emerald-400">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-            <span>{facts.length} Active Memories Loaded</span>
+            <span>{isRTL ? `${facts.length} ذكريات نشطة مدمجة` : `${facts.length} Active Memories Loaded`}</span>
           </div>
         </div>
       </div>
@@ -524,13 +524,13 @@ export default function MemoryControl() {
                   </div>
                   <div>
                     <h2 className="text-base font-bold text-white flex items-center gap-2">
-                      <span>Long-Term Persistent Memory Facts</span>
+                      <span>{isRTL ? 'حقائق الذاكرة الدائمة طويلة المدى' : 'Long-Term Persistent Memory Facts'}</span>
                       <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono border border-emerald-500/30">
-                        {facts.length} Facts
+                        {isRTL ? `${facts.length} حقائق` : `${facts.length} Facts`}
                       </span>
                     </h2>
                     <p className="text-xs text-gray-400 font-sans">
-                      Universal memory store: user profile, coding preferences, project architecture, and learned agent facts.
+                      {isRTL ? 'مستودع الذاكرة الشامل: ملف المستخدم، وتفضيلات البرمجة، ومعمارية المشاريع، والمعلومات المستخلصة من الوكلاء.' : 'Universal memory store: user profile, coding preferences, project architecture, and learned agent facts.'}
                     </p>
                   </div>
                 </div>
@@ -553,7 +553,7 @@ export default function MemoryControl() {
                   title="Export Backup JSON"
                 >
                   <Download className="w-3.5 h-3.5 text-cyan-400" />
-                  <span>Export</span>
+                  <span>{isRTL ? 'تصدير' : 'Export'}</span>
                 </button>
 
                 <button
@@ -566,7 +566,7 @@ export default function MemoryControl() {
                   title="Import Facts JSON"
                 >
                   <Upload className="w-3.5 h-3.5 text-purple-400" />
-                  <span>Import</span>
+                  <span>{isRTL ? 'استيراد' : 'Import'}</span>
                 </button>
 
                 <button
@@ -574,7 +574,7 @@ export default function MemoryControl() {
                   className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:brightness-110 text-gray-950 font-bold text-xs shadow-lg shadow-emerald-500/20 transition-all cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
-                  <span>New Memory Fact</span>
+                  <span>{isRTL ? 'حقيقة جديدة' : 'New Memory Fact'}</span>
                 </button>
               </div>
             </div>
@@ -584,7 +584,7 @@ export default function MemoryControl() {
               <form onSubmit={handleQuickCapture} className="flex items-center gap-2">
                 <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-300 text-xs font-mono shrink-0">
                   <Zap className="w-3.5 h-3.5 text-purple-400" />
-                  <span className="hidden sm:inline">Quick Ingest</span>
+                  <span className="hidden sm:inline">{isRTL ? "إضافة سريعة" : "Quick Ingest"}</span>
                 </div>
 
                 <div className="relative flex-1">
@@ -592,7 +592,7 @@ export default function MemoryControl() {
                     type="text"
                     value={quickInput}
                     onChange={(e) => setQuickInput(e.target.value)}
-                    placeholder="Type or paste any fact to remember (e.g. 'Database: PostgreSQL on port 5432' or 'Preferred UI: Tailwind + Dark Mode')..."
+                    placeholder={isRTL ? "...اكتب أو الصق أي معلومة لحفظها (مثال: 'قاعدة البيانات: PostgreSQL على منفذ 5432' أو 'الواجهة: Tailwind و Dark Mode')" : "Type or paste any fact to remember (e.g. 'Database: PostgreSQL on port 5432' or 'Preferred UI: Tailwind + Dark Mode')..."}
                     className="w-full bg-[#131728] border border-card-border/80 rounded-xl px-3.5 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 transition-colors font-sans"
                   />
                 </div>
@@ -622,7 +622,7 @@ export default function MemoryControl() {
                   ) : (
                     <CornerDownLeft className="w-3.5 h-3.5" />
                   )}
-                  <span className="hidden sm:inline">Save Fact</span>
+                  <span className="hidden sm:inline">{isRTL ? "حفظ الحقيقة" : "Save Fact"}</span>
                 </button>
               </form>
             </div>
@@ -647,7 +647,7 @@ export default function MemoryControl() {
                       }`}
                     >
                       <Icon className={`w-3.5 h-3.5 ${isSelected ? 'text-emerald-400' : 'text-gray-500'}`} />
-                      <span>{cat.label}</span>
+                      <span>{isRTL ? (cat.label || cat.labelEn) : (cat.labelEn || cat.label)}</span>
                       <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
                         isSelected ? 'bg-emerald-500/30 text-emerald-200 font-bold' : 'bg-card-border/40 text-gray-500'
                       }`}>
@@ -666,7 +666,7 @@ export default function MemoryControl() {
                     type="text"
                     value={factsSearch}
                     onChange={(e) => setFactsSearch(e.target.value)}
-                    placeholder="Search facts..."
+                    placeholder={isRTL ? "...البحث في الذكريات" : "Search facts..."}
                     className="w-full bg-[#111422] border border-card-border/80 rounded-xl pl-8 pr-7 py-1.5 text-xs text-gray-200 placeholder:text-gray-500 focus:outline-none focus:border-emerald-500/50"
                   />
                   {factsSearch && (
@@ -684,10 +684,10 @@ export default function MemoryControl() {
                   onChange={(e) => setSelectedSource(e.target.value)}
                   className="bg-[#111422] border border-card-border/80 rounded-xl px-2.5 py-1.5 text-xs text-gray-300 font-mono focus:outline-none cursor-pointer"
                 >
-                  <option value="all">All Sources</option>
-                  <option value="manual">Manual Entry</option>
-                  <option value="agent">Chat Learned</option>
-                  <option value="system">System Default</option>
+                  <option value="all">{isRTL ? "جميع المصادر" : "All Sources"}</option>
+                  <option value="manual">{isRTL ? "إدخال يدوي" : "Manual Entry"}</option>
+                  <option value="agent">{isRTL ? "مستخلصة من المحادثات" : "Chat Learned"}</option>
+                  <option value="system">{isRTL ? "افتراضية النظام" : "System Default"}</option>
                 </select>
 
                 <select
@@ -695,10 +695,10 @@ export default function MemoryControl() {
                   onChange={(e) => setSortBy(e.target.value)}
                   className="bg-[#111422] border border-card-border/80 rounded-xl px-2.5 py-1.5 text-xs text-gray-300 font-mono focus:outline-none cursor-pointer"
                 >
-                  <option value="pinned">⭐ Pinned First</option>
-                  <option value="recent">🕒 Recently Updated</option>
-                  <option value="alpha">🔤 Alphabetical (A-Z)</option>
-                  <option value="category">🏷️ Category</option>
+                  <option value="pinned">{isRTL ? "⭐ المثبتة أولاً" : "⭐ Pinned First"}</option>
+                  <option value="recent">{isRTL ? "🕒 الأحدث تحديثاً" : "🕒 Recently Updated"}</option>
+                  <option value="alpha">{isRTL ? "🔤 أبجدياً (أ-ي)" : "🔤 Alphabetical (A-Z)"}</option>
+                  <option value="category">{isRTL ? "🏷️ حسب التصنيف" : "🏷️ Category"}</option>
                 </select>
 
                 <div className="flex items-center bg-[#111422] border border-card-border/80 rounded-xl p-0.5">

@@ -313,13 +313,13 @@ export default function ResourceMonitor({ agents = [], activeModel }) {
             </div>
             <div>
               <h1 className="text-base font-bold text-gray-100 tracking-tight flex items-center gap-2">
-                <span>System & Hardware Resources</span>
+                <span>{isRTL ? 'موارد النظام والعتاد' : 'System & Hardware Resources'}</span>
                 <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                  Live Telemetry
+                  {isRTL ? 'مراقبة حية' : 'Live Telemetry'}
                 </span>
               </h1>
               <p className="text-xs text-gray-400">
-                Real-time monitoring of CPU, RAM, Dual GPU RTX 5070 VRAM, and process lifecycle control.
+                {isRTL ? 'مراقبة فورية للمعالج (CPU)، والذاكرة (RAM)، وكرتي الرسوميات RTX 5070 VRAM، وإدارة العمليات النشطة.' : 'Real-time monitoring of CPU, RAM, Dual GPU RTX 5070 VRAM, and process lifecycle control.'}
               </p>
             </div>
           </div>
@@ -348,7 +348,7 @@ export default function ResourceMonitor({ agents = [], activeModel }) {
             title="Chat with DevOps Resource Copilot"
           >
             <MessageSquare className="w-3.5 h-3.5 text-indigo-400" />
-            <span>Resource Copilot</span>
+            <span>{isRTL ? 'مساعد الموارد الذكي' : 'Resource Copilot'}</span>
             <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse ml-0.5" />
           </button>
 
@@ -360,7 +360,7 @@ export default function ResourceMonitor({ agents = [], activeModel }) {
             title="Free GPU memory by unloading all active Ollama models"
           >
             <Flame className={`w-3.5 h-3.5 text-amber-400 ${isUnloadingVram ? 'animate-bounce' : ''}`} />
-            <span>{isUnloadingVram ? 'Freeing VRAM...' : 'Free GPU VRAM'}</span>
+            <span>{isUnloadingVram ? (isRTL ? 'جاري تفريغ الذاكرة...' : 'Freeing VRAM...') : (isRTL ? 'تفريغ ذاكرة GPU' : 'Free GPU VRAM')}</span>
           </button>
 
           {/* Polling Rate Selector */}
@@ -372,7 +372,7 @@ export default function ResourceMonitor({ agents = [], activeModel }) {
               }`}
             >
               {isLive ? <Play className="w-3 h-3 fill-current" /> : <Pause className="w-3 h-3" />}
-              <span>{isLive ? 'Live' : 'Paused'}</span>
+              <span>{isLive ? (isRTL ? 'مباشر' : 'Live') : (isRTL ? 'متوقف' : 'Paused')}</span>
             </button>
             <select
               value={refreshInterval}
@@ -414,7 +414,7 @@ export default function ResourceMonitor({ agents = [], activeModel }) {
                     <Cpu className="w-4 h-4" />
                   </div>
                   <div>
-                    <span className="font-bold text-xs text-gray-200">Processor (CPU)</span>
+                    <span className="font-bold text-xs text-gray-200">{isRTL ? 'المعالج المركزي (CPU)' : 'Processor (CPU)'}</span>
                     <div className="text-[10px] text-gray-500 font-mono">{cpu.logical_cores} Cores ({cpu.physical_cores || cpu.logical_cores} Phys)</div>
                   </div>
                 </div>
@@ -436,7 +436,7 @@ export default function ResourceMonitor({ agents = [], activeModel }) {
               {/* Mini Per-Core Matrix */}
               <div className="space-y-1">
                 <div className="text-[9px] uppercase tracking-wider text-gray-500 font-mono flex items-center justify-between">
-                  <span>Core Load Grid</span>
+                  <span>{isRTL ? 'حمولة الأنوية' : 'Core Load Grid'}</span>
                   <span>Avg: {cpu.load_avg?.join(' • ')}</span>
                 </div>
                 <div className="grid grid-cols-7 gap-1 pt-0.5">
@@ -466,7 +466,7 @@ export default function ResourceMonitor({ agents = [], activeModel }) {
                     <Gauge className="w-4 h-4" />
                   </div>
                   <div>
-                    <span className="font-bold text-xs text-gray-200">System RAM</span>
+                    <span className="font-bold text-xs text-gray-200">{isRTL ? 'ذاكرة النظام (RAM)' : 'System RAM'}</span>
                     <div className="text-[10px] text-gray-500 font-mono">{(ram.total_mb / 1024).toFixed(1)} GB Total</div>
                   </div>
                 </div>
@@ -486,15 +486,15 @@ export default function ResourceMonitor({ agents = [], activeModel }) {
 
               <div className="space-y-1 text-[11px] font-mono">
                 <div className="flex items-center justify-between text-gray-400">
-                  <span>Used:</span>
+                  <span>{isRTL ? 'المستخدم:' : 'Used:'}</span>
                   <span className="text-gray-200 font-semibold">{(ram.used_mb / 1024).toFixed(1)} GB</span>
                 </div>
                 <div className="flex items-center justify-between text-gray-400">
-                  <span>Available:</span>
+                  <span>{isRTL ? 'المتاح:' : 'Available:'}</span>
                   <span className="text-emerald-300 font-semibold">{(ram.available_mb / 1024).toFixed(1)} GB</span>
                 </div>
                 <div className="flex items-center justify-between text-gray-500 text-[10px] pt-1 border-t border-white/5">
-                  <span>Swap Usage:</span>
+                  <span>{isRTL ? 'ذاكرة التبديل (Swap):' : 'Swap Usage:'}</span>
                   <span>{ram.swap_percent}% ({(ram.swap_used_mb / 1024).toFixed(1)} GB)</span>
                 </div>
               </div>
