@@ -140,6 +140,15 @@ const CURATED_VOICES = [
   { id: 'en-AU-NatashaNeural', name: 'Natasha (Australian Female)', gender: 'Female', accent: 'AU' }
 ];
 
+const ARABIC_CURATED_VOICES = [
+  { id: 'ar-SA-HamedNeural', name: 'حامد (صوت قيادي وقور - السعودية)', gender: 'Male', accent: 'SA' },
+  { id: 'ar-SA-ZariyahNeural', name: 'زارية (صوت طبيعي واثق - السعودية)', gender: 'Female', accent: 'SA' },
+  { id: 'ar-EG-ShakirNeural', name: 'شاكر (صوت تحليلي دقيق - مصر)', gender: 'Male', accent: 'EG' },
+  { id: 'ar-EG-SalmaNeural', name: 'سلمى (صوت سريع ومقنع - مصر)', gender: 'Female', accent: 'EG' },
+  { id: 'ar-AE-HamdanNeural', name: 'حمدان (صوت رسمي حاسم - الإمارات)', gender: 'Male', accent: 'AE' },
+  { id: 'ar-AE-FatimaNeural', name: 'فاطمة (صوت هادئ ومنطقي - الإمارات)', gender: 'Female', accent: 'AE' }
+];
+
 export default function AgentDebate({ 
   documents = [], 
   agents = [],
