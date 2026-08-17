@@ -92,40 +92,12 @@ Whether running fully air-gapped on private hardware or leveraging frontier clou
 
 ---
 
-## 🗺️ Roadmap & Future Horizons
+## 🗺️ Roadmap & Future Plans
 
-We have an active development roadmap to expand PiStation into a comprehensive multi-platform AI ecosystem:
-
-```mermaid
-graph LR
-  A[Current: Web Agent OS] --> B[Cross-Platform Desktop App]
-  A --> C[Extended Multilingual Support]
-  A --> D[Mobile Companion App]
-  B --> E[Community MCP Marketplace]
-  C --> F[Team Multi-Tenancy]
-```
-
-### 🖥️ 1. Cross-Platform Desktop Application
-* **Native Desktop Shell**: Standalone desktop app powered by **Tauri / Electron** for **Linux (.deb, AppImage, RPM)**, **macOS (.dmg, Apple Silicon/Intel)**, and **Windows (.exe, MSIX)**.
-* **System Tray & Global Hotkeys**: Quick summons with global shortcut (`Alt + Space` / `Cmd + Shift + P`) for instantaneous agent prompt injection.
-* **Offline Background Daemons**: Embedded local server runner requiring zero terminal interaction from end-users.
-
-### 🌍 2. Expanded Multilingual Support
-* **Multi-Language Roster**: Expanding beyond English and Arabic to **Spanish, French, German, Japanese, and Chinese (Simplified & Traditional)**.
-* **Community i18n Translation Engine**: Pluggable translation dictionary allowing users and developers to contribute regional dialects and translations.
-* **Multi-Lingual Voice Synthesis**: Expanding curated neural voice catalogs for all supported languages.
-
-### 📱 3. Mobile & Remote Companion App
-* **Progressive Web App (PWA) & Mobile Client**: Responsive mobile experience to monitor long-running agent tasks, review debate outcomes, and approve tool actions on the go.
-* **Push Notifications**: Live alerts when fine-tuning jobs finish, agent debates conclude, or system hardware thresholds (temperature/VRAM) are reached.
-
-### 🔌 4. Community MCP & Skill Marketplace
-* **One-Click Tool Installation**: Discover, install, and update community Model Context Protocol (MCP) servers with a single click.
-* **Dockerized Safe Sandbox**: Run third-party MCP servers in lightweight, isolated Docker containers with granular permissions.
-
-### 👥 5. Collaborative Team Workspaces & Multi-Tenancy
-* **Shared Knowledge Vaults**: Team document repositories with role-based access control (RBAC).
-* **Multi-User Agent Sessions**: Collaborative debriefing where multiple engineers participate in the same live agent deliberation chamber.
+* [ ] **🖥️ Native Desktop Application**: Package PiStation as a lightweight standalone desktop app (via **Tauri**) for Linux, macOS, and Windows with system tray support and one-click background launch.
+* [ ] **🌍 Expanded Language Support**: Extend the built-in i18n system to support Spanish, French, German, Japanese, and Chinese.
+* [ ] **🔌 Expanded MCP & Skills Library**: Add more out-of-the-box Model Context Protocol tools (Docker container management, Git automation, Brave search).
+* [ ] **📦 One-Click Docker Compose**: Provide an all-in-one `docker-compose.yml` for instant, zero-dependency deployment on local servers, homelabs, and NAS devices.
 
 ---
 
