@@ -48,7 +48,7 @@ export default function Overview({
   onNewSession,
   onDispatchPrompt
 }) {
-  const { t } = useLanguage();
+  const { t, isRTL, language } = useLanguage();
   // 1. Live Time State
   const [currentTime, setCurrentTime] = useState(new Date());
   
@@ -344,74 +344,74 @@ export default function Overview({
   const shortcuts = [
     {
       id: 'chat',
-      title: 'Chat Workspace',
+      title: isRTL ? 'مساحة المحادثة' : 'Chat Workspace',
       icon: MessageSquare,
-      desc: 'Interactive chat & prompt stream',
-      badge: `${sessions.length} sessions`,
+      desc: isRTL ? 'محادثة تفاعلية وتدفق الأوامر' : 'Interactive chat & prompt stream',
+      badge: isRTL ? `${sessions.length} جلسات` : `${sessions.length} sessions`,
       color: 'emerald'
     },
     {
       id: 'projects',
-      title: 'Projects & Code',
+      title: isRTL ? 'المشاريع والأكواد' : 'Projects & Code',
       icon: FolderGit2,
-      desc: 'Live editor & file workspace',
-      badge: `${projects.length} repos`,
+      desc: isRTL ? 'محرر مباشر ومساحة عمل الملفات' : 'Live editor & file workspace',
+      badge: isRTL ? `${projects.length} مشاريع` : `${projects.length} repos`,
       color: 'pink'
     },
     {
       id: 'finetuning',
-      title: 'Fine-Tuning Studio',
+      title: isRTL ? 'استوديو الضبط الدقيق' : 'Fine-Tuning Studio',
       icon: Target,
-      desc: 'Unsloth QLoRA autonomous engine',
-      badge: `${finetuneJobs.length} models`,
+      desc: isRTL ? 'محرك تدريب QLoRA عبر Unsloth' : 'Unsloth QLoRA autonomous engine',
+      badge: isRTL ? `${finetuneJobs.length} نماذج` : `${finetuneJobs.length} models`,
       color: 'purple'
     },
     {
       id: 'studio',
-      title: 'Agent Studio',
+      title: isRTL ? 'استوديو الوكلاء' : 'Agent Studio',
       icon: Users,
-      desc: 'Personas, prompts & tool configs',
-      badge: `${agents.length} agents`,
+      desc: isRTL ? 'تخصيص الشخصيات والتوجيهات والأدوات' : 'Personas, prompts & tool configs',
+      badge: isRTL ? `${agents.length} وكلاء` : `${agents.length} agents`,
       color: 'indigo'
     },
     {
       id: 'debate',
-      title: 'Agent Debate',
+      title: isRTL ? 'غرفة المناظرة' : 'Agent Debate',
       icon: Swords,
-      desc: 'Multi-agent critique arena',
-      badge: 'Active',
+      desc: isRTL ? 'ساحة التداول ونقد الوكلاء' : 'Multi-agent critique arena',
+      badge: isRTL ? 'نشط' : 'Active',
       color: 'amber'
     },
     {
       id: 'skills',
-      title: 'Skills & Tools',
+      title: isRTL ? 'المهارات والأدوات' : 'Skills & Tools',
       icon: Puzzle,
-      desc: 'MCP tools & bash terminal hooks',
-      badge: 'Integrated',
+      desc: isRTL ? 'أدوات MCP وربط أوامر الطرفية' : 'MCP tools & bash terminal hooks',
+      badge: isRTL ? 'مُدمج' : 'Integrated',
       color: 'cyan'
     },
     {
       id: 'docs',
-      title: 'Library',
+      title: isRTL ? 'مكتبة المعرفة' : 'Library',
       icon: BookOpen,
-      desc: 'RAG indexed knowledge base',
-      badge: `${documents.length} files`,
+      desc: isRTL ? 'قاعدة المعرفة المفهرسة عبر RAG' : 'RAG indexed knowledge base',
+      badge: isRTL ? `${documents.length} ملفات` : `${documents.length} files`,
       color: 'blue'
     },
     {
       id: 'memory',
-      title: 'Memory & Facts',
+      title: isRTL ? 'الذاكرة والحقائق' : 'Memory & Facts',
       icon: BrainCircuit,
-      desc: 'Long-term user profile & memory',
-      badge: 'Persistent',
+      desc: isRTL ? 'ملف المستخدم والذاكرة طويلة الأمد' : 'Long-term user profile & memory',
+      badge: isRTL ? 'دائم' : 'Persistent',
       color: 'rose'
     },
     {
       id: 'resources',
-      title: 'System Resources',
+      title: isRTL ? 'موارد النظام' : 'System Resources',
       icon: Activity,
-      desc: 'Dual RTX 5070 & hardware metrics',
-      badge: telemetry?.disk?.free_gb != null ? `${telemetry.disk.free_gb} GB Free` : 'CUDA 13.0',
+      desc: isRTL ? 'مقاييس العتاد ومراقبة الأداء' : 'Dual RTX 5070 & hardware metrics',
+      badge: isRTL ? `${diskFreeGb} جيجابايت متاح` : (telemetry?.disk?.free_gb != null ? `${telemetry.disk.free_gb} {isRTL ? 'جيجابايت متاح' : 'GB Free'}` : 'CUDA 13.0'),
       color: 'teal'
     }
   ];
@@ -443,7 +443,7 @@ export default function Overview({
           {/* Left: Greeting, Station Time & Combined Live Weather */}
           <div className="space-y-1.5 min-w-0">
             <h1 className="text-lg md:text-xl font-extrabold text-white tracking-tight flex items-center gap-2">
-              <span>{greeting}, Commander</span>
+              <span>{isRTL ? (greeting.includes('morning') ? 'صباح الخير، أيها القائد' : (greeting.includes('afternoon') ? 'طاب مساؤك، أيها القائد' : 'مساء الخير، أيها القائد')) : `${greeting}, Commander`}</span>
               <span className="text-lg">⚡</span>
             </h1>
 
@@ -487,7 +487,7 @@ export default function Overview({
 
             <div className="px-2.5 py-1 rounded-xl bg-white/5 border border-white/10 flex items-center gap-1.5 shadow-sm" title={telemetry?.cpu?.model || 'CPU'}>
               <Cpu className="w-3.5 h-3.5 text-emerald-400" />
-              <span className="text-[10px] font-mono font-bold text-gray-200">{telemetry?.cpu?.logical_cores || 28} Cores</span>
+              <span className="text-[10px] font-mono font-bold text-gray-200">{telemetry?.cpu?.logical_cores || 28} {isRTL ? 'أنوية' : 'Cores'}</span>
               {telemetry?.cpu?.percent != null && (
                 <span className="text-[9px] font-mono text-emerald-300">{telemetry.cpu.percent}%</span>
               )}
@@ -510,7 +510,7 @@ export default function Overview({
 
             <div className="px-2.5 py-1 rounded-xl bg-white/5 border border-white/10 flex items-center gap-1.5 shadow-sm" title="Root {t('overview.storage', 'Storage')}">
               <HardDrive className="w-3.5 h-3.5 text-indigo-400" />
-              <span className="text-[10px] font-mono font-bold text-gray-200">{diskFreeGb} GB Free</span>
+              <span className="text-[10px] font-mono font-bold text-gray-200">{diskFreeGb} {isRTL ? 'جيجابايت متاح' : 'GB Free'}</span>
               {telemetry?.disk?.total_gb != null && (
                 <span className="text-[9px] font-mono text-indigo-300">{telemetry.disk.used_gb} / {telemetry.disk.total_gb} GB</span>
               )}
@@ -581,7 +581,7 @@ export default function Overview({
               type="text"
               value={quickPrompt}
               onChange={(e) => setQuickPrompt(e.target.value)}
-              placeholder={`Ask ${currentSelectedAgent.name} anything or dispatch a prompt to workspace...`}
+              placeholder={isRTL ? `...اسأل ${currentSelectedAgent.name} أي شيء أو أرسل توجيهاً لمساحة العمل` : `Ask ${currentSelectedAgent.name} anything or dispatch a prompt to workspace...`}
               className="w-full bg-[#090b12] border border-card-border rounded-xl px-3.5 py-1.5 text-xs text-gray-100 placeholder-gray-500 focus:outline-none focus:border-purple-500/50 font-medium"
             />
           </div>
@@ -591,7 +591,7 @@ export default function Overview({
             disabled={!quickPrompt.trim()}
             className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-40 text-white font-mono font-bold text-xs transition-all flex items-center gap-1.5 shrink-0 shadow-md shadow-purple-900/30 cursor-pointer"
           >
-            <span>Dispatch</span>
+            <span>{isRTL ? 'إرسال التوجيه' : 'Dispatch'}</span>
             <Send className="w-3 h-3" />
           </button>
         </form>
@@ -755,7 +755,7 @@ export default function Overview({
                           ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
                           : 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30'
                       }`}>
-                        {isUsb ? '⚡ USB Drive' : `${d.free_gb}GB Free`}
+                        {isUsb ? '⚡ USB Drive' : `${d.free_gb}{isRTL ? 'جيجابايت متاح' : 'GB Free'}`}
                       </span>
                     </div>
 
@@ -831,7 +831,7 @@ export default function Overview({
                   Station Planner
                 </h2>
                 <p className="text-[10px] text-gray-400 font-mono">
-                  {completedTodosCount} of {todos.length} completed
+                  {isRTL ? `${completedTodosCount} من أصل ${todos.length} مكتملة` : `${completedTodosCount} of ${todos.length} completed`}
                 </p>
               </div>
             </div>
