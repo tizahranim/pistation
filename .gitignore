@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+backend/.venv/
+backend/unsloth_compiled_cache/
+backend/pi_control.db
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# Runtime data (DBs, documents, modelfiles)
+data/
+*.db
+*.sqlite
+backend/data/modelfiles/
+
+# Environment & secrets
+.env
+.env.*
+AGENTS.md
+
+# OS / editor
+.DS_Store
+*.swp
+.idea/
+.vscode/
