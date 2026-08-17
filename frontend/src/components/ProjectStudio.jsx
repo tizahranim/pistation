@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLanguage } from '../context/LanguageContext.jsx';
 import { 
   FolderTree, 
   Folder, 
@@ -38,7 +39,12 @@ import {
 } from 'lucide-react';
 import DiffViewer from './DiffViewer.jsx';
 
-export default function ProjectStudio({ agents = [], activeModel }) {
+export default function ProjectStudio({
+  agents = [],
+  activeModel,
+  ...props
+}) {
+  const { t, isRTL } = useLanguage();
   const [projects, setProjects] = useState([]);
   const [homeDir, setHomeDir] = useState('');
   useEffect(() => {
@@ -726,7 +732,7 @@ export default function ProjectStudio({ agents = [], activeModel }) {
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <FolderGit2 className="w-4 h-4 text-emerald-400" />
-            <span className="text-xs font-mono font-bold text-gray-200">WORKSPACE:</span>
+            <span className="text-xs font-mono font-bold text-gray-200">{t('projects.workspace_label', 'WORKSPACE:')}</span>
           </div>
 
           {/* Project Selector */}
@@ -771,7 +777,7 @@ export default function ProjectStudio({ agents = [], activeModel }) {
             }`}
           >
             <Terminal className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Terminal</span>
+            <span>{t('projects.terminal_tab', 'Terminal')}</span>
           </button>
 
           <button
@@ -783,7 +789,7 @@ export default function ProjectStudio({ agents = [], activeModel }) {
             }`}
           >
             <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-            <span>Chat</span>
+            <span>{t('projects.chat_tab', 'Chat')}</span>
           </button>
         </div>
       </div>
@@ -970,8 +976,8 @@ export default function ProjectStudio({ agents = [], activeModel }) {
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center text-center p-6 text-gray-500 space-y-3 select-none">
                 <FileCode className="w-12 h-12 text-gray-600" />
-                <h4 className="text-sm font-semibold text-gray-300">No file open</h4>
-                <p className="text-xs max-w-sm">Select any file from the explorer on the left to view or edit, or click a folder to focus Copilot.</p>
+                <h4 className="text-sm font-semibold text-gray-300">{t('projects.no_file_open', 'No file open')}</h4>
+                <p className="text-xs max-w-sm">{t('projects.no_file_sub', 'Select any file from the explorer on the left to view or edit, or click a folder to focus Copilot')}.</p>
               </div>
             )}
           </div>

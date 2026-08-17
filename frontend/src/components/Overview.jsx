@@ -610,7 +610,7 @@ export default function Overview({
                 <Sparkles className="w-3.5 h-3.5 text-purple-400" />
                 <span>Station Applications & Feature Shortcuts</span>
               </div>
-              <span className="text-[10px] font-mono text-gray-500">9 Core Modules</span>
+              <span className="text-[10px] font-mono text-gray-500">9 {t('overview.core_modules', 'Core Modules')}</span>
             </div>
 
             <div className="grid grid-cols-3 gap-2 flex-1">
@@ -789,7 +789,7 @@ export default function Overview({
                         title="Explore files & folders on this drive"
                       >
                         <FolderOpen className="w-2.5 h-2.5 text-cyan-400" />
-                        <span>Explore</span>
+                        <span>{t('common.explore', 'Explore')}</span>
                       </button>
 
                       {isUsb ? (
@@ -806,7 +806,7 @@ export default function Overview({
                       ) : (
                         <span className="text-[9px] text-gray-500 flex items-center gap-1" title="Primary OS partition">
                           <Lock className="w-2.5 h-2.5 text-gray-600" />
-                          <span>OS Drive</span>
+                          <span>{t('overview.os_drive', 'OS Drive')}</span>
                         </span>
                       )}
                     </div>
@@ -874,7 +874,7 @@ export default function Overview({
 
             {/* Priority Selector */}
             <div className="flex items-center justify-between text-[10px] font-mono text-gray-400 px-0.5">
-              <span>Priority:</span>
+              <span>{t('common.priority', 'Priority')}:</span>
               <div className="flex items-center gap-1">
                 {[
                   { id: 'high', label: '🔥 High' },
@@ -900,7 +900,7 @@ export default function Overview({
           <div className="space-y-1.5 flex-1 overflow-y-auto pr-1 py-1">
             {filteredTodos.length === 0 ? (
               <div className="p-6 text-center text-xs text-gray-500 font-mono">
-                {todoFilter === 'completed' ? 'No completed tasks.' : 'No active tasks. Add one above!'}
+                {todoFilter === 'completed' ? 'No completed tasks.' : t('overview.no_todos', 'No active tasks. Add one above!')}
               </div>
             ) : (
               filteredTodos.map(todo => (
