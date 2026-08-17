@@ -217,13 +217,62 @@ export default function AgentDebate({
       if (Array.isArray(data)) {
         setDiscussions(data);
       }
+      return data;
     } catch (err) {
       console.error('Failed to load discussions:', err);
+      return [];
     }
   };
 
   useEffect(() => {
-    fetchDiscussions();
+    const initAndRestore = async () => {
+      await fetchDiscussions();
+      const savedDiscussionId = localStorage.getItem('pistation_active_debate_id');
+      const savedViewMode = localStorage.getItem('pistation_debate_view');
+
+      if (savedDiscussionId) {
+        try {
+          const res = await fetch(`/api/chat/discussions/${savedDiscussionId}`);
+          if (res.ok) {
+            const data = await res.json();
+            setActiveDiscussionId(savedDiscussionId);
+            setActiveDiscussionData(data);
+            setTopic(data.topic || '');
+            setCurrentRound(data.rounds || 2);
+
+            if (data.agent_ids) {
+              try {
+                const parsedIds = JSON.parse(data.agent_ids);
+                if (Array.isArray(parsedIds)) setSelectedAgentIds(parsedIds);
+              } catch (e) {}
+            }
+            if (data.leader_id) setLeaderId(data.leader_id);
+
+            let parsedTranscript = [];
+            try {
+              parsedTranscript = JSON.parse(data.transcript || '[]');
+            } catch (e) {
+              parsedTranscript = [];
+            }
+            setStreamTurns(parsedTranscript);
+            setFinalSynthesis(data.summary || '');
+
+            if (savedViewMode === 'chamber') {
+              setViewMode('chamber');
+            }
+
+            // If debate is currently running on the server, reconnect immediately to live events!
+            if (data.status === 'in_progress') {
+              reconnectToLiveDebate(savedDiscussionId);
+            }
+          }
+        } catch (e) {
+          console.error('Failed to restore active debate session:', e);
+        }
+      }
+    };
+
+    initAndRestore();
   }, []);
 
   useEffect(() => {
@@ -602,6 +651,146 @@ export default function AgentDebate({
     }
   };
 
+  // Reusable event stream consumer for both initial debate start and seamless reload reattachment
+  const consumeDebateEventStream = async (res) => {
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let activeTurnObject = null;
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const dataStr = line.replace('data: ', '').trim();
+          if (!dataStr) continue;
+
+          try {
+            const event = JSON.parse(dataStr);
+
+            if (event.type === 'start') {
+              setActiveDiscussionData(event);
+            } else if (event.type === 'round_start') {
+              setCurrentRound(event.round);
+              setCurrentPhase(event.phase || (event.round === 1 ? 'opening' : 'rebuttal'));
+            } else if (event.type === 'human_intervention') {
+              setStreamTurns(prev => {
+                const exists = prev.some(t => t.is_human && t.content === event.content);
+                if (exists) return prev;
+                return [...prev, {
+                  id: `human-${Date.now()}`,
+                  speaker: 'Human Supervisor',
+                  content: event.content,
+                  is_human: true
+                }];
+              });
+            } else if (event.type === 'agent_turn_start') {
+              const aid = event.agent_id || event.agent?.id;
+              const aname = event.agent_name || event.agent?.name || 'Agent';
+              const aavatar = event.agent_avatar || event.agent?.avatar || '🤖';
+              const arole = event.role || event.agent?.role || 'Debater';
+              setActiveSpeakerId(aid);
+              activeTurnObject = {
+                id: `turn-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+                agent_id: aid,
+                agent_name: aname,
+                agent_avatar: aavatar,
+                role: arole,
+                round: event.round || currentRound,
+                target_agent: event.target_agent,
+                target_agent_id: event.target_agent_id,
+                content: '',
+                stance: null
+              };
+              setCurrentTurn(activeTurnObject);
+            } else if (event.type === 'agent_token') {
+              if (activeTurnObject) {
+                activeTurnObject.content += event.content;
+                setCurrentTurn({ ...activeTurnObject });
+              }
+            } else if (event.type === 'stance') {
+              if (activeTurnObject && (activeTurnObject.agent_id === event.agent_id || !event.agent_id)) {
+                activeTurnObject.stance = event.stance;
+                setCurrentTurn({ ...activeTurnObject });
+              }
+            } else if (event.type === 'agent_turn_end') {
+              if (activeTurnObject) {
+                if (event.full_content) {
+                  activeTurnObject.content = event.full_content;
+                }
+                const finalizedTurn = { ...activeTurnObject };
+                setStreamTurns(prev => {
+                  // Prevent duplicate insertion if already recorded
+                  const exists = prev.some(t => t.agent_id === finalizedTurn.agent_id && t.content === finalizedTurn.content);
+                  if (exists) return prev;
+                  return [...prev, finalizedTurn];
+                });
+                
+                // Queue voiceover playback
+                const agentVoice = voiceMap[finalizedTurn.agent_id] || 'en-US-JennyNeural';
+                queueVoicePlayback(finalizedTurn.content, agentVoice, finalizedTurn.id, finalizedTurn.agent_id);
+
+                activeTurnObject = null;
+                setCurrentTurn(null);
+                setActiveSpeakerId(null);
+              }
+            } else if (event.type === 'consensus_update') {
+              if (typeof event.score === 'number') {
+                setConsensusScore(event.score);
+              }
+            } else if (event.type === 'synthesis_start') {
+              setCurrentPhase('synthesis');
+              setActiveSpeakerId(leaderId);
+            } else if (event.type === 'synthesis_token') {
+              setFinalSynthesis(prev => prev + event.content);
+            } else if (event.type === 'complete') {
+              setIsStreaming(false);
+              setActiveSpeakerId(null);
+              if (event.summary) {
+                setFinalSynthesis(event.summary);
+                const leaderVoice = voiceMap[leaderId] || 'en-US-GuyNeural';
+                queueVoicePlayback(event.summary, leaderVoice, 'synthesis', leaderId);
+              }
+              if (event.meta?.consensus_score) {
+                setConsensusScore(event.meta.consensus_score);
+              }
+              fetchDiscussions();
+            }
+          } catch (err) {
+            console.error('Error parsing SSE event in debate:', err);
+          }
+        }
+      }
+    }
+  };
+
+  const reconnectToLiveDebate = async (discussionId) => {
+    setIsStreaming(true);
+    abortControllerRef.current = new AbortController();
+    try {
+      const res = await fetch(`/api/chat/discussions/${discussionId}/events`, {
+        signal: abortControllerRef.current.signal
+      });
+      if (res.ok) {
+        await consumeDebateEventStream(res);
+      }
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        console.error('Failed to stream live events on reattachment:', err);
+      }
+    } finally {
+      setIsStreaming(false);
+      setActiveSpeakerId(null);
+      fetchDiscussions();
+    }
+  };
+
   const handleStartDebate = async () => {
     if (!topic.trim() || selectedAgentIds.length < 2) return;
     stopAllAudio();
@@ -616,6 +805,8 @@ export default function AgentDebate({
 
     const discussionId = `disc-${Date.now().toString(36)}`;
     setActiveDiscussionId(discussionId);
+    localStorage.setItem('pistation_active_debate_id', discussionId);
+    localStorage.setItem('pistation_debate_view', 'chamber');
 
     abortControllerRef.current = new AbortController();
 
@@ -637,112 +828,8 @@ export default function AgentDebate({
       });
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      await consumeDebateEventStream(res);
 
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
-      let activeTurnObject = null;
-
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
-
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const dataStr = line.replace('data: ', '').trim();
-            if (!dataStr) continue;
-
-            try {
-              const event = JSON.parse(dataStr);
-
-              if (event.type === 'start') {
-                setActiveDiscussionData(event);
-              } else if (event.type === 'round_start') {
-                setCurrentRound(event.round);
-                setCurrentPhase(event.phase || (event.round === 1 ? 'opening' : 'rebuttal'));
-              } else if (event.type === 'human_intervention') {
-                setStreamTurns(prev => [...prev, {
-                  id: `human-${Date.now()}`,
-                  speaker: 'Human Supervisor',
-                  content: event.content,
-                  is_human: true
-                }]);
-              } else if (event.type === 'agent_turn_start') {
-                const aid = event.agent_id || event.agent?.id;
-                const aname = event.agent_name || event.agent?.name || 'Agent';
-                const aavatar = event.agent_avatar || event.agent?.avatar || '🤖';
-                const arole = event.role || event.agent?.role || 'Debater';
-                setActiveSpeakerId(aid);
-                activeTurnObject = {
-                  id: `turn-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-                  agent_id: aid,
-                  agent_name: aname,
-                  agent_avatar: aavatar,
-                  role: arole,
-                  round: event.round || currentRound,
-                  target_agent: event.target_agent,
-                  target_agent_id: event.target_agent_id,
-                  content: '',
-                  stance: null
-                };
-                setCurrentTurn(activeTurnObject);
-              } else if (event.type === 'agent_token') {
-                if (activeTurnObject) {
-                  activeTurnObject.content += event.content;
-                  setCurrentTurn({ ...activeTurnObject });
-                }
-              } else if (event.type === 'stance') {
-                if (activeTurnObject && (activeTurnObject.agent_id === event.agent_id || !event.agent_id)) {
-                  activeTurnObject.stance = event.stance;
-                  setCurrentTurn({ ...activeTurnObject });
-                }
-              } else if (event.type === 'agent_turn_end') {
-                if (activeTurnObject) {
-                  if (event.full_content) {
-                    activeTurnObject.content = event.full_content;
-                  }
-                  const finalizedTurn = { ...activeTurnObject };
-                  setStreamTurns(prev => [...prev, finalizedTurn]);
-                  
-                  // Queue voiceover playback with specific agent voice and agentId
-                  const agentVoice = voiceMap[finalizedTurn.agent_id] || 'en-US-JennyNeural';
-                  queueVoicePlayback(finalizedTurn.content, agentVoice, finalizedTurn.id, finalizedTurn.agent_id);
-
-                  activeTurnObject = null;
-                  setCurrentTurn(null);
-                  setActiveSpeakerId(null);
-                }
-              } else if (event.type === 'consensus_update') {
-                setConsensusScore(event.score);
-              } else if (event.type === 'synthesis_start') {
-                setCurrentPhase('synthesis');
-                setActiveSpeakerId(leaderId);
-              } else if (event.type === 'synthesis_token') {
-                setFinalSynthesis(prev => prev + event.content);
-              } else if (event.type === 'complete') {
-                setIsStreaming(false);
-                setActiveSpeakerId(null);
-                if (event.summary) {
-                  setFinalSynthesis(event.summary);
-                  // Queue voiceover for synthesis with leader voice
-                  const leaderVoice = voiceMap[leaderId] || 'en-US-GuyNeural';
-                  queueVoicePlayback(event.summary, leaderVoice, 'synthesis', leaderId);
-                }
-                if (event.meta?.consensus_score) {
-                  setConsensusScore(event.meta.consensus_score);
-                }
-                fetchDiscussions();
-              }
-            } catch (err) {
-              console.error('Error parsing SSE event in debate:', err);
-            }
-          }
-        }
-      }
     } catch (err) {
       if (err.name !== 'AbortError') {
         console.error('Debate streaming failure:', err);
@@ -761,6 +848,9 @@ export default function AgentDebate({
     stopAllAudio();
     setIsStreaming(false);
     setActiveSpeakerId(null);
+    if (activeDiscussionId) {
+      fetch(`/api/chat/discussions/${activeDiscussionId}/stop`, { method: 'POST' }).catch(() => {});
+    }
     fetch('/api/chat/discussions/reset-stuck', { method: 'POST' }).catch(() => {});
   };
 
@@ -771,7 +861,10 @@ export default function AgentDebate({
     }
 
     setActiveDiscussionId(disc.id);
+    localStorage.setItem('pistation_active_debate_id', disc.id);
+    localStorage.setItem('pistation_debate_view', 'chamber');
     setViewMode('chamber');
+
     try {
       const res = await fetch(`/api/chat/discussions/${disc.id}`);
       const data = await res.json();
@@ -788,13 +881,17 @@ export default function AgentDebate({
       setTopic(data.topic || '');
       setCurrentRound(data.rounds || 2);
       
-      // Calculate or estimate consensus score from transcript
       const agreeCount = parsedTranscript.filter(t => t.stance?.type === 'AGREE').length;
       const totalStances = parsedTranscript.filter(t => t.stance).length;
       if (totalStances > 0) {
         setConsensusScore(Math.round((agreeCount / totalStances) * 100));
       } else {
         setConsensusScore(75);
+      }
+
+      // If discussion is in progress, automatically reconnect to live events!
+      if (disc.status === 'in_progress') {
+        reconnectToLiveDebate(disc.id);
       }
     } catch (err) {
       console.error('Failed to load discussion details:', err);
@@ -1066,6 +1163,8 @@ export default function AgentDebate({
 
           <button
             onClick={() => {
+              localStorage.removeItem('pistation_active_debate_id');
+              localStorage.setItem('pistation_debate_view', 'config');
               setViewMode('config');
               setActiveDiscussionId(null);
             }}
@@ -1491,6 +1590,7 @@ export default function AgentDebate({
                 <button
                   onClick={() => {
                     stopAllAudio();
+                    localStorage.setItem('pistation_debate_view', 'config');
                     setViewMode('config');
                   }}
                   className="p-2 rounded-xl bg-[#141829] hover:bg-[#1f253e] text-gray-400 hover:text-white border border-card-border transition-colors cursor-pointer shrink-0"

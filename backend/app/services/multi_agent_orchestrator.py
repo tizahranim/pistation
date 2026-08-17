@@ -40,6 +40,96 @@ def compute_consensus(turns: List[Dict[str, Any]]) -> Tuple[int, int]:
     disagreements = sum(1 for s in stances if s["stance"].get("type") == "DISAGREE")
     return int(round(avg * 100)), disagreements
 
+
+class DiscussionTaskHub:
+    _instance = None
+
+    def __init__(self):
+        self.tasks: Dict[str, asyncio.Task] = {}
+        self.event_buffers: Dict[str, List[Dict[str, Any]]] = {}
+        self.subscribers: Dict[str, List[asyncio.Queue]] = {}
+        self.lock = asyncio.Lock()
+
+    @classmethod
+    def get_hub(cls) -> "DiscussionTaskHub":
+        if cls._instance is None:
+            cls._instance = DiscussionTaskHub()
+        return cls._instance
+
+    async def broadcast_event(self, discussion_id: str, event: Dict[str, Any]):
+        async with self.lock:
+            if discussion_id not in self.event_buffers:
+                self.event_buffers[discussion_id] = []
+            self.event_buffers[discussion_id].append(event)
+
+            if len(self.event_buffers[discussion_id]) > 2000:
+                self.event_buffers[discussion_id] = self.event_buffers[discussion_id][-2000:]
+
+            subs = self.subscribers.get(discussion_id, [])
+            for q in list(subs):
+                try:
+                    q.put_nowait(event)
+                except Exception:
+                    pass
+
+    async def subscribe(self, discussion_id: str) -> AsyncGenerator[Dict[str, Any], None]:
+        q = asyncio.Queue()
+        async with self.lock:
+            if discussion_id not in self.subscribers:
+                self.subscribers[discussion_id] = []
+            self.subscribers[discussion_id].append(q)
+            history = list(self.event_buffers.get(discussion_id, []))
+
+        for ev in history:
+            yield ev
+
+        try:
+            while True:
+                ev = await q.get()
+                yield ev
+                if ev.get("type") in ("complete", "error", "cancelled"):
+                    break
+        finally:
+            async with self.lock:
+                if discussion_id in self.subscribers and q in self.subscribers[discussion_id]:
+                    self.subscribers[discussion_id].remove(q)
+                if discussion_id in self.subscribers and not self.subscribers[discussion_id]:
+                    self.subscribers.pop(discussion_id, None)
+
+    def is_running(self, discussion_id: str) -> bool:
+        task = self.tasks.get(discussion_id)
+        return bool(task and not task.done())
+
+    async def start_task(self, discussion_id: str, coroutine):
+        if self.is_running(discussion_id):
+            self.tasks[discussion_id].cancel()
+
+        async with self.lock:
+            self.event_buffers[discussion_id] = []
+
+        async def _runner():
+            try:
+                async for event in coroutine:
+                    await self.broadcast_event(discussion_id, event)
+            except asyncio.CancelledError:
+                await self.broadcast_event(discussion_id, {"type": "cancelled", "discussion_id": discussion_id})
+            except Exception as e:
+                await self.broadcast_event(discussion_id, {"type": "error", "message": str(e), "discussion_id": discussion_id})
+            finally:
+                self.tasks.pop(discussion_id, None)
+
+        task = asyncio.create_task(_runner())
+        self.tasks[discussion_id] = task
+        return task
+
+    def stop_task(self, discussion_id: str) -> bool:
+        task = self.tasks.get(discussion_id)
+        if task and not task.done():
+            task.cancel()
+            return True
+        return False
+
+
 class MultiAgentOrchestrator:
     @staticmethod
     async def run_discussion(

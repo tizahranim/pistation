@@ -9,7 +9,7 @@ import asyncio
 from typing import List, Dict, Any, Optional
 from app.db import get_db
 from app.services.llm_router import LLMRouter
-from app.services.multi_agent_orchestrator import MultiAgentOrchestrator
+from app.services.multi_agent_orchestrator import MultiAgentOrchestrator, DiscussionTaskHub
 from app.services.doc_indexer import DocIndexer
 
 router = APIRouter(prefix="/api/chat", tags=["chat"])
@@ -304,8 +304,9 @@ async def discussion_stream(req: DiscussionRequest):
     await db.commit()
     await db.close()
 
-    async def sse_disc_generator():
-        async for event in MultiAgentOrchestrator.run_discussion(
+    hub = DiscussionTaskHub.get_hub()
+    if not hub.is_running(discussion_id):
+        generator_coroutine = MultiAgentOrchestrator.run_discussion(
             discussion_id=discussion_id,
             topic=req.topic,
             agent_ids=req.agent_ids,
@@ -314,10 +315,35 @@ async def discussion_stream(req: DiscussionRequest):
             roles_map=req.roles_map or {},
             human_guidance=req.human_guidance,
             rounds=req.rounds
-        ):
+        )
+        await hub.start_task(discussion_id, generator_coroutine)
+
+    async def sse_disc_generator():
+        async for event in hub.subscribe(discussion_id):
             yield f"data: {json.dumps(event)}\n\n"
 
     return StreamingResponse(sse_disc_generator(), media_type="text/event-stream")
+
+@router.get("/discussions/{discussion_id}/events")
+async def get_discussion_events(discussion_id: str):
+    hub = DiscussionTaskHub.get_hub()
+    async def sse_reconnect_generator():
+        async for event in hub.subscribe(discussion_id):
+            yield f"data: {json.dumps(event)}\n\n"
+
+    return StreamingResponse(sse_reconnect_generator(), media_type="text/event-stream")
+
+@router.post("/discussions/{discussion_id}/stop")
+async def stop_discussion_daemon(discussion_id: str):
+    hub = DiscussionTaskHub.get_hub()
+    stopped = hub.stop_task(discussion_id)
+    db = await get_db()
+    try:
+        await db.execute("UPDATE discussions SET status = 'interrupted' WHERE id = ?;", (discussion_id,))
+        await db.commit()
+    finally:
+        await db.close()
+    return {"status": "stopped", "stopped": stopped}
 
 @router.get("/discussions")
 async def list_discussions():
