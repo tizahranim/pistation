@@ -263,6 +263,8 @@ export default function App() {
             <AgentDebate
               documents={documents}
               agents={agents}
+              onRefreshDocs={fetchDocuments}
+              onRefreshDocuments={fetchDocuments}
             />
           </div>
 

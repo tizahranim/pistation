@@ -141,7 +141,9 @@ const CURATED_VOICES = [
 
 export default function AgentDebate({ 
   documents = [], 
-  agents = []
+  agents = [],
+  onRefreshDocs,
+  onRefreshDocuments
 }) {
   const [selectedDocIds, setSelectedDocIds] = useState([]);
   const [selectedAgentIds, setSelectedAgentIds] = useState([]);
@@ -415,7 +417,7 @@ export default function AgentDebate({
     }
   };
 
-  // Upload local file directly and auto-attach
+  // Upload local file directly and auto-attach (matching ChatWorkspace implementation)
   const handleUploadLocalFile = async (e, targetContext = 'config') => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -431,12 +433,15 @@ export default function AgentDebate({
         });
         if (res.ok) {
           const docData = await res.json();
-          if (docData?.id) {
+          const newDocId = docData?.document?.id || docData?.id;
+          if (newDocId) {
             if (targetContext === 'config') {
-              setSelectedDocIds(prev => Array.from(new Set([...prev, docData.id])));
+              setSelectedDocIds(prev => Array.from(new Set([...prev, newDocId])));
             } else {
-              setInterveneDocIds(prev => Array.from(new Set([...prev, docData.id])));
+              setInterveneDocIds(prev => Array.from(new Set([...prev, newDocId])));
             }
+            onRefreshDocs?.();
+            onRefreshDocuments?.();
           }
         }
       }
