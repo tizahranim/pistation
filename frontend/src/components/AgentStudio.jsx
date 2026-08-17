@@ -27,6 +27,54 @@ export default function AgentStudio({
   onSelectAgentForChat 
 }) {
   const { t, isRTL } = useLanguage();
+
+  const getLocalizedAgentName = (agentName) => {
+    if (!isRTL) return agentName;
+    const map = {
+      'Pi Lead Agent': 'الوكيل القائد Pi',
+      'System Architect': 'مهندس النظم',
+      'Doc Analyst & Researcher': 'محلل المستندات والباحث',
+      'Security Auditor': 'مدقق الأمان والحماية',
+      'General Purpose Agent': 'وكيل المهام العامة'
+    };
+    return map[agentName] || agentName;
+  };
+
+  const getLocalizedRole = (agentRole) => {
+    if (!isRTL) return agentRole || 'AI Specialist';
+    const map = {
+      'Generalist Problem Solver & Code Orchestrator': 'المساعد العام المتقدم وحلال المشكلات والأكواد',
+      'Software Architecture & Design Review': 'معمارية البرمجيات ومراجعة التصميم',
+      'Deep Document Synthesis & Fact-Checker': 'استخلاص المستندات العميقة وتدقيق الحقائق',
+      'Vulnerability & Safety Specialist': 'أخصائي الثغرات والأمان البرمجي',
+      'General Problem Solver & Assistant': 'مساعد عام وحلال للمشكلات'
+    };
+    return map[agentRole] || agentRole;
+  };
+
+  const getLocalizedSystemPrompt = (prompt, agentName) => {
+    if (!isRTL) return prompt;
+    const map = {
+      'Pi Lead Agent': 'أنت الوكيل القائد والمشرف العام على تنفيذ الأوامر وتحليل المهام البرمجية والتنسيق بين وكلاء النظام.',
+      'System Architect': 'أنت مهندس النظم الرئيسي، مسؤول عن تحليل البنية التحتية، تصميم معمارية البرمجيات، ومراجعة جودة الأكواد.',
+      'Doc Analyst & Researcher': 'أنت باحث ومحلل مستندات متخصص في استخراج الحقائق وتلخيص المعرفة من الملفات.',
+      'Security Auditor': 'أنت خبير الأمان السيبراني، مسؤول عن تدقيق الأكواد، اكتشاف الثغرات الأمنية، وضمان سلامة الأنظمة.',
+      'General Purpose Agent': 'أنت وكيل ذكي متعدد الاستخدامات للمساعدة في المهام العامة والإجابة على الاستفسارات.'
+    };
+    return map[agentName] || prompt;
+  };
+
+  const getLocalizedLog = (text) => {
+    if (!isRTL) return text;
+    if (!text) return '';
+    return text
+      .replace(/Taking turn in Round (\d+)/g, 'المشاركة في مداولات الجولة $1')
+      .replace(/Starting debate:/g, 'بدء المناظرة:')
+      .replace(/Joined discussion/g, 'انضم إلى المناقشة')
+      .replace(/Synthesizing conclusion/g, 'استخلاص الاستنتاج النهائي')
+      .replace(/Evaluating baseline/g, 'تقييم الأداء الأولي');
+  };
+
   const [showModal, setShowModal] = useState(false);
   const [editingAgent, setEditingAgent] = useState(null);
   const [activityLogs, setActivityLogs] = useState([]);
@@ -250,7 +298,7 @@ export default function AgentStudio({
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-gray-400 font-mono">
-              Configured Agents ({agents.length})
+              {isRTL ? `الوكلاء المهيأون (${agents.length})` : `Configured Agents (${agents.length})`}
             </span>
           </div>
 
@@ -267,8 +315,8 @@ export default function AgentStudio({
                         {agent.avatar || '🤖'}
                       </div>
                       <div>
-                        <h4 className="text-sm font-semibold text-gray-100">{agent.name}</h4>
-                        <span className="text-[11px] text-gray-400 font-mono">{agent.role}</span>
+                        <h4 className="text-sm font-semibold text-gray-100">{getLocalizedAgentName(agent.name)}</h4>
+                        <span className="text-[11px] text-gray-400 font-mono">{getLocalizedRole(agent.role)}</span>
                       </div>
                     </div>
 
@@ -276,14 +324,14 @@ export default function AgentStudio({
                       <button
                         onClick={() => handleOpenEdit(agent)}
                         className="p-1.5 rounded-lg hover:bg-card-border/80 text-gray-400 hover:text-gray-200 transition-colors"
-                        title="Edit Agent"
+                        title={isRTL ? 'تعديل الوكيل' : 'Edit Agent'}
                       >
                         <Edit3 className="w-3.5 h-3.5" />
                       </button>
                       <button
                         onClick={() => handleDelete(agent.id)}
                         className="p-1.5 rounded-lg hover:bg-red-500/20 text-gray-400 hover:text-red-400 transition-colors"
-                        title="Delete Agent"
+                        title={isRTL ? 'حذف الوكيل' : 'Delete Agent'}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -291,7 +339,7 @@ export default function AgentStudio({
                   </div>
 
                   <p className="text-xs text-gray-400 mt-2.5 line-clamp-2 leading-relaxed font-sans">
-                    {agent.system_prompt}
+                    {getLocalizedSystemPrompt(agent.system_prompt, agent.name)}
                   </p>
                 </div>
 
@@ -307,7 +355,7 @@ export default function AgentStudio({
                     onClick={() => onSelectAgentForChat(agent.id)}
                     className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-medium transition-all"
                   >
-                    <span>Chat</span>
+                    <span>{isRTL ? 'محادثة' : 'Chat'}</span>
                     <Play className="w-2.5 h-2.5 fill-current" />
                   </button>
                 </div>
@@ -321,12 +369,12 @@ export default function AgentStudio({
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-gray-400 font-mono flex items-center gap-1.5">
               <Activity className="w-3.5 h-3.5 text-indigo-400" />
-              Agent Action Log
+              {isRTL ? 'سجل أنشطة الوكلاء' : 'Agent Action Log'}
             </span>
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-mono text-gray-400 flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/70" />
-                All Agents Idle
+                {isRTL ? 'جميع الوكلاء في حالة خمول' : 'All Agents Idle'}
               </span>
               {activityLogs.length > 0 && (
                 <button
@@ -339,7 +387,7 @@ export default function AgentStudio({
                     }
                   }}
                   className="p-1 hover:text-red-400 text-gray-500 rounded transition-colors"
-                  title="Clear Log History"
+                  title={isRTL ? 'مسح سجل الأنشطة' : 'Clear Log History'}
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
@@ -351,19 +399,19 @@ export default function AgentStudio({
             {activityLogs.length === 0 ? (
               <div className="p-8 text-center text-gray-500 space-y-1">
                 <Terminal className="w-6 h-6 mx-auto mb-2 opacity-30" />
-                <div className="text-xs font-mono text-gray-400">All Agents in Standby</div>
-                <div className="text-[11px] text-gray-600">No active background executions running.</div>
+                <div className="text-xs font-mono text-gray-400">{isRTL ? "جميع الوكلاء في وضع الاستعداد" : "All Agents in Standby"}</div>
+                <div className="text-[11px] text-gray-600">{isRTL ? "لا توجد عمليات نشطة قيد التشغيل حالياً." : "No active background executions running."}</div>
               </div>
             ) : (
               activityLogs.map((log) => (
                 <div key={log.id} className="p-2.5 rounded-lg bg-[#121520] border border-card-border/50 space-y-1">
                   <div className="flex items-center justify-between text-[10px]">
                     <span className="font-semibold text-indigo-300 flex items-center gap-1">
-                      <span>{log.agent_name || 'Agent'}</span>
+                      <span>{getLocalizedAgentName(log.agent_name) || (isRTL ? "الوكيل" : "Agent")}</span>
                     </span>
                     <span className="text-gray-500 font-mono">{new Date(log.timestamp).toLocaleTimeString()}</span>
                   </div>
-                  <div className="text-[11px] text-gray-300 font-sans">{log.details}</div>
+                  <div className="text-[11px] text-gray-300 font-sans">{getLocalizedLog(log.details)}</div>
                 </div>
               ))
             )}
@@ -378,7 +426,7 @@ export default function AgentStudio({
             <div className="flex items-center justify-between pb-2 border-b border-card-border">
               <h3 className="font-bold text-sm text-gray-100 flex items-center gap-2">
                 <Bot className="w-4 h-4 text-emerald-400" />
-                {editingAgent ? 'Edit Agent Profile' : 'Create New Agent'}
+                {editingAgent ? (isRTL ? 'تعديل ملف الوكيل' : 'Edit Agent Profile') : (isRTL ? 'إنشاء وكيل جديد' : 'Create New Agent')}
               </h3>
               <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-200">
                 <X className="w-4 h-4" />
@@ -389,7 +437,7 @@ export default function AgentStudio({
               {/* Agent Name & Avatar */}
               <div className="grid grid-cols-4 gap-3">
                 <div className="col-span-3 space-y-1">
-                  <label className="text-[11px] font-mono uppercase text-gray-400">Agent Name</label>
+                  <label className="text-[11px] font-mono uppercase text-gray-400">{isRTL ? 'اسم الوكيل' : 'Agent Name'}</label>
                   <input
                     type="text"
                     required
@@ -401,7 +449,7 @@ export default function AgentStudio({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[11px] font-mono uppercase text-gray-400">Avatar</label>
+                  <label className="text-[11px] font-mono uppercase text-gray-400">{isRTL ? 'الرمز التعبيري' : 'Avatar'}</label>
                   <select
                     value={avatar}
                     onChange={(e) => setAvatar(e.target.value)}
@@ -416,7 +464,7 @@ export default function AgentStudio({
 
               {/* Role Title */}
               <div className="space-y-1">
-                <label className="text-[11px] font-mono uppercase text-gray-400">Role / Domain Specialty</label>
+                <label className="text-[11px] font-mono uppercase text-gray-400">{isRTL ? 'الدور / التخصص' : 'Role / Domain Specialty'}</label>
                 <input
                   type="text"
                   value={role}
@@ -428,7 +476,7 @@ export default function AgentStudio({
 
               {/* System Prompt */}
               <div className="space-y-1">
-                <label className="text-[11px] font-mono uppercase text-gray-400">System Instructions & Persona</label>
+                <label className="text-[11px] font-mono uppercase text-gray-400">{isRTL ? 'التوجيهات الأساسية والشخصية' : 'System Instructions & Persona'}</label>
                 <textarea
                   required
                   rows={4}
@@ -444,10 +492,10 @@ export default function AgentStudio({
                 <div className="flex items-center justify-between">
                   <label className="text-[11px] font-mono uppercase text-gray-300 font-semibold flex items-center gap-1.5">
                     <Cpu className="w-3.5 h-3.5 text-amber-400" />
-                    Assigned Model Engine
+                    {isRTL ? 'محرك النموذج المعين' : 'Assigned Model Engine'}
                   </label>
                   <span className="text-[10px] font-mono text-emerald-300 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 truncate max-w-[200px]">
-                    Active: {modelId} ({modelProvider})
+                    {isRTL ? 'النشط:' : 'Active:'} {modelId} ({modelProvider})
                   </span>
                 </div>
 
@@ -458,7 +506,7 @@ export default function AgentStudio({
                     type="text"
                     value={modelSearch}
                     onChange={(e) => setModelSearch(e.target.value)}
-                    placeholder="Search 400+ OpenRouter & Ollama models..."
+                    placeholder="{isRTL ? 'البحث في أكثر من 400 نموذج سحابي ومحلي...' : 'Search 400+ OpenRouter & Ollama models...'}"
                     className="w-full bg-[#141824] border border-card-border rounded-lg pl-8 pr-3 py-1.5 text-xs text-gray-100 placeholder:text-gray-500 focus:outline-none focus:border-emerald-500/50"
                   />
                 </div>
@@ -471,7 +519,7 @@ export default function AgentStudio({
                       type="text"
                       value={customModelInput}
                       onChange={(e) => setCustomModelInput(e.target.value)}
-                      placeholder="Paste exact model ID (e.g. meta-llama/llama-3.1-405b)"
+                      placeholder="{isRTL ? 'لصق معرّف النموذج بدقة (مثل meta-llama/llama-3.1-405b)' : 'Paste exact model ID (e.g. meta-llama/llama-3.1-405b)'}"
                       className="w-full bg-[#121520] border border-card-border/80 rounded-lg pl-7 pr-2 py-1 text-[11px] text-gray-200 font-mono placeholder:text-gray-500 focus:outline-none focus:border-indigo-500/50"
                     />
                   </div>
@@ -491,7 +539,7 @@ export default function AgentStudio({
                   {filteredOllama.length > 0 && (
                     <div>
                       <div className="text-[10px] font-mono uppercase text-emerald-400 font-semibold px-1.5 py-0.5">
-                        Local Models (Ollama)
+                        {isRTL ? 'النماذج المحلية (Ollama)' : 'Local Models (Ollama)'}
                       </div>
                       <div className="space-y-0.5 mt-0.5">
                         {filteredOllama.map(m => (
