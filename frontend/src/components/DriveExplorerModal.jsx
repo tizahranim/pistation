@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from '../context/LanguageContext.jsx';
 import {
   Folder, File, HardDrive, ArrowLeft, RefreshCw, X, ChevronRight,
   Search, CornerDownRight, Copy, Check, ExternalLink, Terminal,
@@ -6,6 +7,7 @@ import {
 } from 'lucide-react';
 
 export default function DriveExplorerModal({ drive, onClose, onOpenInTerminal }) {
+  const { t, isRTL } = useLanguage();
   const [homeDir, setHomeDir] = useState('/home');
 
   useEffect(() => {

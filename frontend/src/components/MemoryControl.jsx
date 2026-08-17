@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useLanguage } from '../context/LanguageContext.jsx';
 import { 
   BrainCircuit, 
   FileText, 
@@ -37,6 +38,7 @@ const CATEGORIES = [
 ];
 
 export default function MemoryControl() {
+  const { t, isRTL } = useLanguage();
   const [activeTab, setActiveTab] = useState('facts'); // 'facts' | 'rules' | 'sessions'
   
   // Facts state

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useLanguage } from '../context/LanguageContext.jsx';
 import { 
   FileText, 
   Upload, 
@@ -25,6 +26,7 @@ import {
 } from 'lucide-react';
 
 export default function DocumentInventory({ documents = [], onRefreshDocs }) {
+  const { t, isRTL } = useLanguage();
   const [selectedDocId, setSelectedDocId] = useState(null);
   const [docDetail, setDocDetail] = useState(null);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);

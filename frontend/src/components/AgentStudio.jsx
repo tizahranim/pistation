@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from '../context/LanguageContext.jsx';
 import { 
   Users, 
   Plus, 
@@ -25,6 +26,7 @@ export default function AgentStudio({
   onRefreshAgents,
   onSelectAgentForChat 
 }) {
+  const { t, isRTL } = useLanguage();
   const [showModal, setShowModal] = useState(false);
   const [editingAgent, setEditingAgent] = useState(null);
   const [activityLogs, setActivityLogs] = useState([]);

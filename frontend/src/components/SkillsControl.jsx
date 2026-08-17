@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useLanguage } from '../context/LanguageContext.jsx';
 import { 
   Puzzle, 
   Search, 
@@ -126,6 +127,7 @@ const NATIVE_TOOLS = [
 ];
 
 export default function SkillsControl() {
+  const { t, isRTL } = useLanguage();
   const [activeHubTab, setActiveHubTab] = useState('skills'); // 'skills' | 'mcp' | 'tools'
   const [systemInfo, setSystemInfo] = useState({ home_dir: '$HOME', db_path: '$DB_PATH' });
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLanguage } from '../context/LanguageContext.jsx';
 import {
   Sparkles,
   Cpu,
@@ -36,6 +37,7 @@ import {
 } from 'lucide-react';
 
 export default function FineTuningStudio({ models, agents = [], activeModel }) {
+  const { t, isRTL } = useLanguage();
   // Modes: 'wizard' (Auto based on weakness), 'manual' (Custom + Attach Dataset), 'datasets' (Dataset Hub), 'arena' (Testing Arena)
   const [activeTab, setActiveTab] = useState('wizard');
   

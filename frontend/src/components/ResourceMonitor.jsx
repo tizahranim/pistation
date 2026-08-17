@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLanguage } from '../context/LanguageContext.jsx';
 import {
   Activity,
   Cpu,
@@ -35,6 +36,7 @@ import {
 import DriveExplorerModal from './DriveExplorerModal';
 
 export default function ResourceMonitor({ agents = [], activeModel }) {
+  const { t, isRTL } = useLanguage();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isLive, setIsLive] = useState(true);
