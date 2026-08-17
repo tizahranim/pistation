@@ -2,6 +2,48 @@
 
 A self-hosted Agent Operating System and dashboard: a FastAPI backend with a React frontend that gives local AI agents (Ollama + OpenRouter) control over your machine's files, projects, storage, documents, memory, and hardware.
 
+## Screenshots
+
+**Overview** — live system telemetry, weather, station shortcuts, and the quick-prompt bar.
+
+![Overview](docs/screenshots/overview.png)
+
+**Chat Workspace** — multi-agent conversations with streaming tokens and visible reasoning.
+
+![Chat Workspace](docs/screenshots/chat-workspace.png)
+
+**Project Studio** — code editor, file tree, and a built-in terminal for agent-driven development.
+
+![Project Studio](docs/screenshots/project-studio.png)
+
+**Agent Studio** — create and configure custom agents with their own models and prompts.
+
+![Agent Studio](docs/screenshots/agent-studio.png)
+
+**Agent Debate** — orchestrate multi-agent discussions that converge on a single answer.
+
+![Agent Debate](docs/screenshots/agent-debate.png)
+
+**Fine-Tuning Studio** — generate datasets and run LoRA fine-tuning with Unsloth.
+
+![Fine-Tuning Studio](docs/screenshots/fine-tuning.png)
+
+**Documents Library** — ingest, search, and chat over your local documents.
+
+![Documents Library](docs/screenshots/documents-library.png)
+
+**Memory & Facts** — persistent facts, rule files, and session memory for your agents.
+
+![Memory & Facts](docs/screenshots/memory-facts.png)
+
+**Skills & Tools Hub** — agent skills plus MCP servers (filesystem, web fetch, SQLite, GitHub).
+
+![Skills & Tools Hub](docs/screenshots/skills-tools.png)
+
+**System Resources** — real-time CPU, RAM, GPU, and disk monitoring with a drive explorer.
+
+![System Resources](docs/screenshots/system-resources.png)
+
 ## Features
 
 - **Chat Workspace** — multi-agent chat with streaming responses, thinking/reasoning display, and session history
