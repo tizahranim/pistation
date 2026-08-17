@@ -39,6 +39,48 @@ const CATEGORIES = [
 
 export default function MemoryControl() {
   const { t, isRTL } = useLanguage();
+
+  const getLocalizedFactKey = (key) => {
+    if (!isRTL || !key) return key;
+    if (key.startsWith('Debate: ')) {
+      return key.replace('Debate: ', 'مناظرة: ');
+    }
+    if (key.startsWith('Debate Verdict: ')) {
+      return key.replace('Debate Verdict: ', 'قرار المناظرة: ');
+    }
+    const map = {
+      'Tech Stack': 'حزمة التقنيات',
+      'Coding Style': 'أسلوب البرمجة',
+      'User Name': 'اسم المستخدم',
+      'Preferred Framework': 'إطار العمل المفضل',
+      'Database': 'قاعدة البيانات'
+    };
+    return map[key] || key;
+  };
+
+  const getLocalizedCategoryName = (cat) => {
+    if (!isRTL || !cat) return cat?.replace('_', ' ');
+    const map = {
+      'user_profile': 'هوية المستخدم',
+      'preference': 'التفضيلات',
+      'project_rule': 'قواعد المشروع',
+      'knowledge': 'المعرفة',
+      'debate_outcome': 'مخرجات المناظرة'
+    };
+    return map[cat] || cat;
+  };
+
+  const getLocalizedSource = (src) => {
+    if (!isRTL || !src) return src || 'manual';
+    const map = {
+      'system': 'النظام',
+      'manual': 'يدوي',
+      'agent': 'الوكيل',
+      'debate_outcome': 'المناظرة'
+    };
+    return map[src] || src;
+  };
+
   const [activeTab, setActiveTab] = useState('facts'); // 'facts' | 'rules' | 'sessions'
   
   // Facts state
@@ -453,7 +495,7 @@ export default function MemoryControl() {
           <div className="flex items-center gap-2 px-1">
             <BrainCircuit className="w-5 h-5 text-emerald-400 animate-pulse" />
             <span className="text-xs font-bold uppercase tracking-wider text-gray-200 font-mono">
-              Memory & Facts OS
+              {isRTL ? "نظام الذاكرة والحقائق" : "Memory & Facts OS"}
             </span>
           </div>
 
@@ -602,10 +644,10 @@ export default function MemoryControl() {
                   onChange={(e) => setQuickCategory(e.target.value)}
                   className="bg-[#131728] border border-card-border/80 rounded-xl px-3 py-2 text-xs text-gray-300 font-mono focus:outline-none focus:border-purple-500 shrink-0 cursor-pointer"
                 >
-                  <option value="user_profile">👤 User Profile</option>
-                  <option value="preference">⚙️ Preferences</option>
-                  <option value="project_rule">📐 Project Rule</option>
-                  <option value="knowledge">📚 Knowledge</option>
+                  <option value="user_profile">👤 {isRTL ? "هوية المستخدم" : "User Profile"}</option>
+                  <option value="preference">⚙️ {isRTL ? "التفضيلات" : "Preferences"}</option>
+                  <option value="project_rule">📐 {isRTL ? "قواعد المشروع" : "Project Rule"}</option>
+                  <option value="knowledge">📚 {isRTL ? "المعرفة" : "Knowledge"}</option>
                 </select>
 
                 <button
@@ -805,7 +847,7 @@ export default function MemoryControl() {
                               </button>
                               <span className="font-bold text-xs text-white font-mono flex items-center gap-1.5 truncate">
                                 <span className={`w-2 h-2 rounded-full shrink-0 ${theme.dot}`} />
-                                <span className="truncate">{fact.key}</span>
+                                <span className="truncate">{getLocalizedFactKey(fact.key)}</span>
                               </span>
                             </div>
 
@@ -859,12 +901,12 @@ export default function MemoryControl() {
 
                         <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[10px] font-mono text-gray-400">
                           <span className={`px-2 py-0.5 rounded-full border text-[10px] font-bold ${theme.badge}`}>
-                            {fact.category?.replace('_', ' ')}
+                            {getLocalizedCategoryName(fact.category)}
                           </span>
 
                           <div className="flex items-center gap-1.5 text-gray-500">
-                            <span>Src: <strong className="text-gray-400">{fact.source || 'manual'}</strong></span>
-                            {isPinned && <span className="text-amber-400">★ Pinned</span>}
+                            <span>{isRTL ? "المصدر:" : "Src:"} <strong className="text-gray-400">{getLocalizedSource(fact.source)}</strong></span>
+                            {isPinned && <span className="text-amber-400">★ {isRTL ? "مثبت" : "Pinned"}</span>}
                           </div>
                         </div>
                       </div>
@@ -890,11 +932,11 @@ export default function MemoryControl() {
                               )}
                             </button>
                           </th>
-                          <th className="p-3.5 w-48">Fact Key</th>
-                          <th className="p-3.5">Value / Content</th>
-                          <th className="p-3.5 w-32">Category</th>
-                          <th className="p-3.5 w-24">Source</th>
-                          <th className="p-3.5 w-28 text-right">Actions</th>
+                          <th className="p-3.5 w-48">{isRTL ? "عنوان الحقيقة" : "Fact Key"}</th>
+                          <th className="p-3.5">{isRTL ? "المحتوى / القيمة" : "Value / Content"}</th>
+                          <th className="p-3.5 w-32">{isRTL ? "التصنيف" : "Category"}</th>
+                          <th className="p-3.5 w-24">{isRTL ? "المصدر" : "Source"}</th>
+                          <th className="p-3.5 w-28 text-right">{isRTL ? "الإجراءات" : "Actions"}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-card-border/40">
@@ -926,7 +968,7 @@ export default function MemoryControl() {
                               <td className="p-3.5 font-mono font-bold text-white">
                                 <div className="flex items-center gap-1.5">
                                   {isPinned && <Star className="w-3 h-3 text-amber-400 fill-amber-400 shrink-0" />}
-                                  <span className="truncate">{fact.key}</span>
+                                  <span className="truncate">{getLocalizedFactKey(fact.key)}</span>
                                 </div>
                               </td>
 
@@ -936,7 +978,7 @@ export default function MemoryControl() {
 
                               <td className="p-3.5">
                                 <span className={`px-2 py-0.5 rounded-full border text-[10px] font-mono font-bold ${theme.badge}`}>
-                                  {fact.category?.replace('_', ' ')}
+                                  {getLocalizedCategoryName(fact.category)}
                                 </span>
                               </td>
 
