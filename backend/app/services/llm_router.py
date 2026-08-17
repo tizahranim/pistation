@@ -154,6 +154,25 @@ class LLMRouter:
                             except Exception:
                                 continue
         except Exception as e:
+            # If cloud network/DNS fails, attempt seamless fallback to local Ollama if running
+            try:
+                async with httpx.AsyncClient(timeout=2.0) as check_client:
+                    tags_res = await check_client.get(f"{OLLAMA_BASE_URL}/api/tags")
+                    if tags_res.status_code == 200:
+                        models_data = tags_res.json().get("models", [])
+                        if models_data:
+                            fallback_m = models_data[0]["name"]
+                            async for chunk in LLMRouter._ollama_stream(
+                                model=fallback_m,
+                                messages=messages,
+                                system_prompt=system_prompt,
+                                temperature=temperature
+                            ):
+                                yield chunk
+                            return
+            except Exception:
+                pass
+
             yield {
                 "content": f"⚠️ {label} Connection Failure: {str(e)}",
                 "done": True
@@ -269,6 +288,32 @@ class LLMRouter:
         try:
             async with httpx.AsyncClient(timeout=120.0) as client:
                 async with client.stream("POST", f"{OLLAMA_BASE_URL}/api/chat", json=payload) as response:
+                    if response.status_code == 404:
+                        # Model not found, find first available local model
+                        tags_res = await client.get(f"{OLLAMA_BASE_URL}/api/tags")
+                        if tags_res.status_code == 200:
+                            models_data = tags_res.json().get("models", [])
+                            if models_data and models_data[0]["name"] != model:
+                                fallback_m = models_data[0]["name"]
+                                payload["model"] = fallback_m
+                                async with client.stream("POST", f"{OLLAMA_BASE_URL}/api/chat", json=payload) as fallback_res:
+                                    async for line in fallback_res.aiter_lines():
+                                        if line.strip():
+                                            try:
+                                                data = json.loads(line)
+                                                message = data.get("message", {})
+                                                content = message.get("content", "")
+                                                thinking = message.get("thinking", "")
+                                                done = data.get("done", False)
+                                                yield {
+                                                    "content": content,
+                                                    "thinking": thinking,
+                                                    "done": done
+                                                }
+                                            except Exception:
+                                                continue
+                                return
+
                     async for line in response.aiter_lines():
                         if line.strip():
                             try:
