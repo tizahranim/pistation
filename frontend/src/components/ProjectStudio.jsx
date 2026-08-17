@@ -81,7 +81,7 @@ export default function ProjectStudio({
     {
       id: 'init',
       role: 'assistant',
-      content: 'Hello! I am your AI assistant in Project Studio. Click any folder or file to focus my awareness, ask questions about your workspace, or tell me to write code!'
+      content: 'مرحباً! أنا مساعدك الذكي في استوديو المشاريع. انقر على أي ملف أو مجلد لتوجيه انتباهي، أو اسألني عن مساحة العمل، أو اطلب مني كتابة وتعديل الأكواد!'
     }
   ]);
   const [inputPrompt, setInputPrompt] = useState('');
@@ -210,7 +210,7 @@ export default function ProjectStudio({
             {
               id: 'init',
               role: 'assistant',
-              content: 'Hello! I am your AI assistant in Project Studio. Click any folder or file to focus my awareness, ask questions about your workspace, or tell me to write code!'
+              content: 'مرحباً! أنا مساعدك الذكي في استوديو المشاريع. انقر على أي ملف أو مجلد لتوجيه انتباهي، أو اسألني عن مساحة العمل، أو اطلب مني كتابة وتعديل الأكواد!'
             }
           ]);
         }
@@ -800,7 +800,7 @@ export default function ProjectStudio({
         {/* Left Pane: File Tree Explorer */}
         <div className="w-64 border-r border-card-border bg-[#0d0f17] flex flex-col shrink-0 select-none overflow-hidden">
           <div className="p-2.5 border-b border-card-border flex items-center justify-between text-xs text-gray-400">
-            <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-gray-400">Files</span>
+            <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-gray-400">{isRTL ? 'الملفات' : 'Files'}</span>
             <div className="flex items-center gap-1">
               <button
                 onClick={() => {
@@ -809,7 +809,7 @@ export default function ProjectStudio({
                   setShowNewFileModal(true);
                 }}
                 className="p-1 hover:text-emerald-400 text-gray-400 transition-colors"
-                title="New File"
+                title={isRTL ? 'ملف جديد' : 'New File'}
               >
                 <FilePlus className="w-3.5 h-3.5" />
               </button>
@@ -820,14 +820,14 @@ export default function ProjectStudio({
                   setShowNewFileModal(true);
                 }}
                 className="p-1 hover:text-indigo-400 text-gray-400 transition-colors"
-                title="New Folder"
+                title={isRTL ? 'مجلد جديد' : 'New Folder'}
               >
                 <FolderPlus className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={() => fetchTree(activeProjectId)}
                 className="p-1 hover:text-gray-200 text-gray-400 transition-colors"
-                title="Refresh File Tree"
+                title={isRTL ? 'تحديث شجرة الملفات' : 'Refresh File Tree'}
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${isLoadingTree ? 'animate-spin' : ''}`} />
               </button>
@@ -838,11 +838,11 @@ export default function ProjectStudio({
             {isLoadingTree ? (
               <div className="flex items-center justify-center h-32 text-gray-500 text-xs gap-2">
                 <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />
-                <span>Scanning files...</span>
+                <span>{isRTL ? 'جاري فحص الملفات...' : 'Scanning files...'}</span>
               </div>
             ) : projectTree.length === 0 ? (
               <div className="text-center py-8 px-4 text-xs text-gray-500">
-                <p>No files found.</p>
+                <p>{isRTL ? 'لا توجد ملفات.' : 'No files found.'}</p>
               </div>
             ) : (
               renderTreeNodes(projectTree)
@@ -851,7 +851,7 @@ export default function ProjectStudio({
 
           {/* Project Path Footer */}
           <div className="p-2 border-t border-card-border bg-[#090b10] text-[10px] font-mono text-gray-500 truncate" title={activeProject?.path}>
-            {activeProject?.path || 'No directory selected'}
+            {activeProject?.path || isRTL ? 'لم يتم تحديد مجلد' : 'No directory selected'}
           </div>
         </div>
 
@@ -900,7 +900,7 @@ export default function ProjectStudio({
                   title="Save File (Ctrl + S)"
                 >
                   {isSavingFile ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
-                  <span>{activeTab.isModified ? 'Save Changes' : 'Saved'}</span>
+                  <span>{activeTab.isModified ? (isRTL ? 'حفظ التعديلات' : 'Save Changes') : (isRTL ? 'تم الحفظ' : 'Saved')}</span>
                 </button>
               </div>
             )}
@@ -926,7 +926,7 @@ export default function ProjectStudio({
                         download={activeTab.name}
                         className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 flex items-center gap-1 hover:bg-emerald-500/30"
                       >
-                        <Download className="w-3 h-3" /> Download
+                        <Download className="w-3 h-3" /> {isRTL ? "تنزيل" : "Download"}
                       </a>
                     </div>
                   </div>
@@ -936,14 +936,14 @@ export default function ProjectStudio({
                 <div className="flex-1 flex flex-col items-center justify-center text-center p-6 text-gray-400 space-y-3">
                   <FileText className="w-16 h-16 text-indigo-400" />
                   <h4 className="text-sm font-semibold text-gray-200">{activeTab.name}</h4>
-                  <p className="text-xs text-gray-500">Binary file format ({Math.round(activeTab.size / 1024)} KB)</p>
+                  <p className="text-xs text-gray-500">{isRTL ? 'ملف بصيغة ثنائية' : 'Binary file format'} ({Math.round(activeTab.size / 1024)} KB)</p>
                   <a
                     href={activeTab.raw_url}
                     download={activeTab.name}
                     className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-mono flex items-center gap-1.5"
                   >
                     <Download className="w-3.5 h-3.5" />
-                    <span>Download Binary File</span>
+                    <span>{isRTL ? 'تنزيل الملف الثنائي' : 'Download Binary File'}</span>
                   </a>
                 </div>
               ) : (
@@ -964,10 +964,10 @@ export default function ProjectStudio({
                   
                   {/* Editor Status Bar */}
                   <div className="h-6 border-t border-card-border bg-[#0a0c12] px-3 flex items-center justify-between text-[11px] font-mono text-gray-500 select-none">
-                    <span>Path: {activeTab.path}</span>
+                    <span>{isRTL ? 'المسار:' : 'Path:'} {activeTab.path}</span>
                     <div className="flex items-center gap-4">
-                      <span>{activeTab.content.split('\n').length} Lines</span>
-                      <span>{activeTab.content.length} Characters</span>
+                      <span>{activeTab.content.split('\n').length} {isRTL ? 'أسطر' : 'Lines'}</span>
+                      <span>{activeTab.content.length} {isRTL ? 'حروف' : 'Characters'}</span>
                       <span className="text-emerald-400">UTF-8</span>
                     </div>
                   </div>
@@ -1043,7 +1043,7 @@ export default function ProjectStudio({
                     {log.status === 'running' ? (
                       <div className="flex items-center gap-2 text-indigo-400 py-0.5">
                         <Loader2 className="w-3 h-3 animate-spin" />
-                        <span>Running command...</span>
+                        <span>{isRTL ? 'جاري تنفيذ الأمر...' : 'Running command...'}</span>
                       </div>
                     ) : (
                       log.output && (
@@ -1098,7 +1098,7 @@ export default function ProjectStudio({
             <div className="p-3 border-b border-card-border flex items-center justify-between bg-[#0e111a]">
               <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-gray-200">
                 <Sparkles className="w-4 h-4 text-indigo-400" />
-                <span>CHAT</span>
+                <span>{isRTL ? 'محادثة المشروع' : 'CHAT'}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <select
@@ -1113,7 +1113,7 @@ export default function ProjectStudio({
                 <button
                   onClick={handleClearProjectChat}
                   className="p-1 rounded hover:bg-[#1f2436] text-gray-500 hover:text-red-400 transition-colors"
-                  title="Clear Chat History for this Project"
+                  title={isRTL ? 'مسح سجل محادثة المشروع' : 'Clear Chat History for this Project'}
                 >
                   <Trash2 className="w-3 h-3" />
                 </button>
@@ -1124,7 +1124,7 @@ export default function ProjectStudio({
             <div className="px-3 py-1.5 border-b border-card-border bg-[#101422] flex items-center justify-between text-[11px] font-mono">
               <div className="flex items-center gap-1 text-indigo-300 truncate">
                 <Target className="w-3 h-3 text-indigo-400 shrink-0" />
-                <span className="truncate">Focus: {focusedFolder ? `/${focusedFolder}` : 'Project Root (~)'}</span>
+                <span className="truncate">{isRTL ? `التركيز: ${focusedFolder ? `/${focusedFolder}` : 'المجلد الرئيسي (~)'}` : `Focus: ${focusedFolder ? `/${focusedFolder}` : 'Project Root (~)'}`}</span>
               </div>
               {activeTab && (
                 <span className="text-[10px] text-emerald-400 truncate max-w-[100px]" title={activeTab.name}>
@@ -1154,7 +1154,7 @@ export default function ProjectStudio({
                     <div className="whitespace-pre-wrap font-sans">
                       {msg.content || (msg.isStreaming ? (
                         <span className="inline-flex items-center gap-1.5 text-indigo-300 font-mono">
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" /> Thinking & analyzing files...
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" /> {isRTL ? "جاري التفكير وتحليل الملفات..." : "Thinking & analyzing files..."}
                         </span>
                       ) : '')}
                     </div>
@@ -1168,7 +1168,7 @@ export default function ProjectStudio({
                             className="px-2 py-1 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-[10px] font-mono font-bold flex items-center gap-1"
                           >
                             <FileCheck className="w-3 h-3" />
-                            <span>Apply to Open Tab</span>
+                            <span>{isRTL ? 'تطبيق على الملف المفتوح' : 'Apply to Open Tab'}</span>
                           </button>
                         )}
 
@@ -1177,7 +1177,7 @@ export default function ProjectStudio({
                           className="px-2 py-1 rounded bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/40 text-[10px] font-mono font-bold flex items-center gap-1"
                         >
                           <Save className="w-3 h-3" />
-                          <span>Save as {msg.suggested_filename || 'File'}</span>
+                          <span>{isRTL ? `حفظ باسم ${msg.suggested_filename || 'ملف'}` : `Save as ${msg.suggested_filename || 'File'}`}</span>
                         </button>
                       </div>
                     )}
@@ -1243,7 +1243,7 @@ export default function ProjectStudio({
                       handleSendChatMessage();
                     }
                   }}
-                  placeholder={focusedFolder ? `Ask about /${focusedFolder} or tell me to write code...` : "Ask about files or tell me to write code..."}
+                  placeholder={focusedFolder ? (isRTL ? `اسأل عن /${focusedFolder} أو اطلب كتابة كود...` : `Ask about /${focusedFolder} or tell me to write code...`) : (isRTL ? "...اسأل عن الملفات أو اطلب كتابة وتعديل الكود" : "Ask about files or tell me to write code...")}
                   rows={2}
                   className="flex-1 bg-[#151928] border border-card-border rounded-xl px-3 py-2 text-xs text-gray-100 placeholder:text-gray-500 focus:outline-none focus:border-indigo-500 resize-none font-sans"
                 />
@@ -1267,7 +1267,7 @@ export default function ProjectStudio({
                     title="Attach file from computer"
                   >
                     <Paperclip className="w-3 h-3" />
-                    <span>Attach</span>
+                    <span>{isRTL ? 'إرفاق' : 'Attach'}</span>
                   </button>
 
                   <button
@@ -1281,7 +1281,7 @@ export default function ProjectStudio({
                     title="Attach document from Library"
                   >
                     <BookOpen className="w-3 h-3" />
-                    <span>Library</span>
+                    <span>{isRTL ? 'المكتبة' : 'Library'}</span>
                   </button>
 
                   {/* Library Document Picker Pop-Up */}
@@ -1293,7 +1293,7 @@ export default function ProjectStudio({
                       <div className="flex items-center justify-between px-2 py-1 text-[11px] font-semibold font-mono text-gray-300 border-b border-card-border mb-1.5">
                         <div className="flex items-center gap-1.5">
                           <BookOpen className="w-3.5 h-3.5 text-indigo-400" />
-                          <span>Attach from Library</span>
+                          <span>{isRTL ? 'إرفاق من المكتبة' : 'Attach from Library'}</span>
                         </div>
                         <button
                           type="button"
@@ -1306,7 +1306,7 @@ export default function ProjectStudio({
 
                       <div className="max-h-48 overflow-y-auto space-y-1 my-1.5">
                         {libraryDocs.length === 0 ? (
-                          <div className="p-3 text-xs text-gray-500 text-center font-mono">No documents in Library yet.</div>
+                          <div className="p-3 text-xs text-gray-500 text-center font-mono">{isRTL ? 'لا توجد مستندات في المكتبة بعد.' : 'No documents in Library yet.'}</div>
                         ) : (
                           libraryDocs.map(doc => {
                             const isChecked = selectedDocIds.includes(doc.id);
@@ -1336,7 +1336,7 @@ export default function ProjectStudio({
 
                       <div className="pt-1.5 border-t border-card-border flex items-center justify-between">
                         <span className="text-[10px] font-mono text-gray-400">
-                          {selectedDocIds.length} selected
+                          {selectedDocIds.length} {isRTL ? 'محدد' : 'selected'}
                         </span>
                         <button
                           type="button"
@@ -1366,7 +1366,7 @@ export default function ProjectStudio({
             <div className="flex items-center justify-between border-b border-card-border pb-3">
               <h3 className="text-sm font-bold text-gray-100 flex items-center gap-2">
                 <FolderPlus className="w-4 h-4 text-emerald-400" />
-                <span>Create New Project Workspace</span>
+                <span>{isRTL ? 'إنشاء مساحة عمل لمشروع جديد' : 'Create New Project Workspace'}</span>
               </h3>
               <button onClick={() => setShowNewProjectModal(false)} className="text-gray-400 hover:text-gray-200">
                 <X className="w-4 h-4" />
@@ -1375,7 +1375,7 @@ export default function ProjectStudio({
 
             <form onSubmit={handleCreateProject} className="space-y-3">
               <div>
-                <label className="text-[11px] font-mono text-gray-400">Project Name:</label>
+                <label className="text-[11px] font-mono text-gray-400">{isRTL ? "اسم المشروع:" : "Project Name:"}</label>
                 <input
                   type="text"
                   required
@@ -1387,21 +1387,21 @@ export default function ProjectStudio({
               </div>
 
               <div>
-                <label className="text-[11px] font-mono text-gray-400">Scaffold Template:</label>
+                <label className="text-[11px] font-mono text-gray-400">{isRTL ? "قالب المشروع:" : "Scaffold Template:"}</label>
                 <select
                   value={newProjectTemplate}
                   onChange={(e) => setNewProjectTemplate(e.target.value)}
                   className="w-full mt-1 bg-[#181c2b] border border-card-border rounded-lg px-3 py-2 text-xs text-gray-100 focus:outline-none focus:border-emerald-500"
                 >
-                  <option value="blank">📄 Blank Project</option>
-                  <option value="python">🐍 Python (FastAPI / Pytest)</option>
-                  <option value="react">⚛️ React + Vite Web App</option>
-                  <option value="node">📦 Node.js CLI Tool</option>
+                  <option value="blank">{isRTL ? "📄 مشروع فارغ" : "📄 Blank Project"}</option>
+                  <option value="python">{isRTL ? "🐍 بايثون (FastAPI / Pytest)" : "🐍 Python (FastAPI / Pytest)"}</option>
+                  <option value="react">{isRTL ? "⚛️ تطبيق ويب React + Vite" : "⚛️ React + Vite Web App"}</option>
+                  <option value="node">{isRTL ? "📦 أداة طرفية Node.js" : "📦 Node.js CLI Tool"}</option>
                 </select>
               </div>
 
               <div>
-                <label className="text-[11px] font-mono text-gray-400">Custom Path (Optional):</label>
+                <label className="text-[11px] font-mono text-gray-400">{isRTL ? "مسار مخصص (اختياري):" : "Custom Path (Optional):"}</label>
                 <input
                   type="text"
                   placeholder={`${homeDir}/projects/my-app`}
@@ -1437,7 +1437,7 @@ export default function ProjectStudio({
           <div className="bg-[#111420] border border-card-border rounded-2xl max-w-sm w-full p-4 space-y-3 shadow-2xl animate-in zoom-in-95">
             <div className="flex items-center justify-between border-b border-card-border pb-2">
               <h3 className="text-xs font-bold text-gray-100">
-                {isCreatingFolder ? '📁 Create New Folder' : '📄 Create New File'}
+                {isRTL ? (isCreatingFolder ? '📁 إنشاء مجلد جديد' : '📄 إنشاء ملف جديد') : (isCreatingFolder ? '📁 Create New Folder' : '📄 Create New File')}
               </h3>
               <button onClick={() => setShowNewFileModal(false)} className="text-gray-400 hover:text-gray-200">
                 <X className="w-3.5 h-3.5" />
@@ -1447,7 +1447,7 @@ export default function ProjectStudio({
             <form onSubmit={handleCreateFileOrFolder} className="space-y-3">
               <div>
                 <label className="text-[10px] font-mono text-gray-400">
-                  {isCreatingFolder ? 'Folder Name:' : 'File Name (with extension):'}
+                  {isRTL ? (isCreatingFolder ? 'اسم المجلد:' : 'اسم الملف (مع الامتداد):') : (isCreatingFolder ? 'Folder Name:' : 'File Name (with extension):')}
                 </label>
                 <input
                   type="text"
