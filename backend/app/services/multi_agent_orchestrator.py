@@ -413,10 +413,17 @@ Keep the entire synthesis tight and executive-grade."""
             cursor = await db.execute("SELECT * FROM discussions WHERE id = ?;", (discussion_id,))
             disc_row = await cursor.fetchone()
             if not disc_row:
-                yield {"type": "error", "message": "Discussion not found"}
-                return
+                await db.execute("""
+                INSERT OR IGNORE INTO discussions (id, title, topic, status, created_at)
+                VALUES (?, ?, ?, 'in_progress', CURRENT_TIMESTAMP);
+                """, (discussion_id, f"Debate: {human_message[:30]}...", human_message))
+                await db.commit()
+                cursor = await db.execute("SELECT * FROM discussions WHERE id = ?;", (discussion_id,))
+                disc_row = await cursor.fetchone()
 
-            disc = dict(disc_row)
+            disc = dict(disc_row) if disc_row else {
+                "id": discussion_id, "topic": human_message, "leader_id": None, "roles_map": "{}", "agent_ids": "[]"
+            }
             transcript = []
             try:
                 transcript = json.loads(disc.get("transcript") or "[]")
@@ -451,13 +458,23 @@ Keep the entire synthesis tight and executive-grade."""
 
             yield {"type": "human_intervention", "content": human_message}
 
-            chosen_agent_id = target_agent_id or disc.get("leader_id")
-            if not chosen_agent_id:
-                agent_ids = json.loads(disc.get("agent_ids") or "[]")
-                chosen_agent_id = agent_ids[0] if agent_ids else None
+            chosen_agent_id = None
+            if target_agent_id and target_agent_id != "leader":
+                chosen_agent_id = target_agent_id
+            else:
+                chosen_agent_id = disc.get("leader_id")
+                if not chosen_agent_id:
+                    try:
+                        agent_ids = json.loads(disc.get("agent_ids") or "[]")
+                        chosen_agent_id = agent_ids[0] if agent_ids else None
+                    except Exception:
+                        chosen_agent_id = None
 
-            cursor = await db.execute("SELECT * FROM agents WHERE id = ?;", (chosen_agent_id,))
-            agent_row = await cursor.fetchone()
+            agent_row = None
+            if chosen_agent_id:
+                cursor = await db.execute("SELECT * FROM agents WHERE id = ?;", (chosen_agent_id,))
+                agent_row = await cursor.fetchone()
+            
             if not agent_row:
                 cursor = await db.execute("SELECT * FROM agents LIMIT 1;")
                 agent_row = await cursor.fetchone()

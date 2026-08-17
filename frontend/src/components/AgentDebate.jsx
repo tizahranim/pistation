@@ -835,9 +835,18 @@ export default function AgentDebate({
       document_ids: attachedIds
     }]);
 
+    const discId = activeDiscussionId || `disc-${Date.now().toString(36)}`;
+    if (!activeDiscussionId) {
+      setActiveDiscussionId(discId);
+    }
+
+    setIsStreaming(true);
+
     try {
       const targetId = targetInterventionAgentId === 'leader' ? leaderId : targetInterventionAgentId;
-      const res = await fetch(`/api/chat/discussions/${activeDiscussionId}/participate/stream`, {
+      setActiveSpeakerId(targetId || selectedAgentIds[0] || null);
+
+      const res = await fetch(`/api/chat/discussions/${discId}/participate/stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -867,12 +876,13 @@ export default function AgentDebate({
               const event = JSON.parse(dataStr);
               if (event.type === 'agent_turn_start') {
                 const aid = event.agent_id || event.agent?.id;
+                setActiveSpeakerId(aid);
                 replyObj = {
                   id: `reply-${Date.now()}`,
                   agent_id: aid,
-                  agent_name: event.agent_name || event.agent?.name,
-                  agent_avatar: event.agent_avatar || event.agent?.avatar,
-                  role: event.role || event.agent?.role,
+                  agent_name: event.agent_name || event.agent?.name || 'Agent',
+                  agent_avatar: event.agent_avatar || event.agent?.avatar || '🤖',
+                  role: event.role || event.agent?.role || 'Debater',
                   content: ''
                 };
                 setCurrentTurn(replyObj);
@@ -880,11 +890,23 @@ export default function AgentDebate({
                 replyObj.content += event.content;
                 setCurrentTurn({ ...replyObj });
               } else if (event.type === 'agent_turn_end' && replyObj) {
+                if (event.full_content) {
+                  replyObj.content = event.full_content;
+                }
                 const fin = { ...replyObj };
                 setStreamTurns(prev => [...prev, fin]);
                 queueVoicePlayback(fin.content, voiceMap[fin.agent_id] || 'en-US-JennyNeural', fin.id, fin.agent_id);
                 setCurrentTurn(null);
                 replyObj = null;
+                setActiveSpeakerId(null);
+              } else if (event.type === 'error') {
+                console.error('Intervention event error:', event.message);
+                setStreamTurns(prev => [...prev, {
+                  id: `err-${Date.now()}`,
+                  speaker: 'System',
+                  content: `⚠️ ${event.message || 'Intervention could not be processed.'}`,
+                  is_human: false
+                }]);
               }
             }
           }
@@ -892,6 +914,10 @@ export default function AgentDebate({
       }
     } catch (err) {
       console.error('Intervention stream failed:', err);
+    } finally {
+      setIsStreaming(false);
+      setActiveSpeakerId(null);
+      fetchDiscussions();
     }
   };
 
