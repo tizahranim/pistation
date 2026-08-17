@@ -18,7 +18,8 @@
 
 [Overview](#-overview) •
 [Key Features](#-key-features) •
-[Bilingual Arabic Support](#-first-class-arabic--rtl-support) •
+[Screenshots](#-interface-walkthrough) •
+[Roadmap & Future](#-roadmap--future-plans) •
 [Roadmap & Future](#-roadmap--future-horizons) •
 [System Architecture](#-system-architecture) •
 [Quick Start](#-quick-start) •
@@ -89,6 +90,24 @@ Whether running fully air-gapped on private hardware or leveraging frontier clou
 * **Curated Arabic Neural Voices**: 6 regional Arabic voice profiles (Saudi `حامد` & `زارية`, Egyptian `شاكر` & `سلمى`, Emirati `حمدان` & `فاطمة`) for text-to-speech audio playback.
 * **Arabic Persona Prompts & Suggestions**: Cultural and linguistic alignment for agent personas, starter prompts, and debate deliberations.
 * **Hands-Free Arabic Dictation**: Real-time voice-to-text in Arabic and English across Chat, Projects Copilot, and Supervisor Interventions.
+
+---
+
+## 📸 Interface Walkthrough
+
+| Studio / Feature | Preview |
+| :--- | :--- |
+| **System Overview & Dashboard**<br/>Live resource telemetry, weather, to-do list, and quick dispatch prompt bar. | ![Overview](docs/screenshots/overview.png) |
+| **Executive Arena & Multi-Agent Deliberation**<br/>Round-table debate chamber, live stance extraction, consensus meter, and neural voiceover. | ![Agent Debate](docs/screenshots/agent-debate.png) |
+| **Chat Workspace & Reasoning Visualizer**<br/>Streaming multi-agent conversation with visible `<think>` chain-of-thought introspection. | ![Chat Workspace](docs/screenshots/chat-workspace.png) |
+| **Project Studio & Built-in Terminal**<br/>Interactive file explorer, Monaco code editor, terminal, and context-aware Copilot. | ![Project Studio](docs/screenshots/project-studio.png) |
+| **Universal Knowledge Library & RAG**<br/>Multi-file indexing, semantic search similarity testing, and document inspection. | ![Documents Library](docs/screenshots/documents-library.png) |
+| **Agent Studio**<br/>Create and customize specialist agents with distinct system prompts, personas, and model endpoints. | ![Agent Studio](docs/screenshots/agent-studio.png) |
+| **Fine-Tuning Studio**<br/>Synthetic dataset generation and Unsloth LoRA fine-tuning workflows with Ollama export. | ![Fine-Tuning Studio](docs/screenshots/fine-tuning.png) |
+| **Memory & Facts Control**<br/>Persistent SQLite facts registry, pinned guidelines, and memory categories. | ![Memory & Facts](docs/screenshots/memory-facts.png) |
+| **Skills & Tools Hub**<br/>Tool management, MCP server registration, and terminal execution hooks. | ![Skills & Tools Hub](docs/screenshots/skills-tools.png) |
+| **System Resources & Hardware Matrix**<br/>Real-time CPU/RAM/VRAM statistics, temperature telemetry, and drive explorer. | ![System Resources](docs/screenshots/system-resources.png) |
+
 
 ---
 
