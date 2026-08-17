@@ -38,7 +38,21 @@ export default function Sidebar({
   onDeleteSession,
   onNewSession
 }) {
-  const { t } = useLanguage();
+  
+  const { t, isRTL } = useLanguage();
+
+  const getLocalizedAgentName = (agentName) => {
+    if (!isRTL) return agentName;
+    const map = {
+      'Pi Lead Agent': 'الوكيل القائد Pi',
+      'System Architect': 'مهندس النظم',
+      'Doc Analyst & Researcher': 'محلل المستندات والباحث',
+      'Security Auditor': 'مدقق الأمان والحماية',
+      'General Purpose Agent': 'وكيل المهام العامة'
+    };
+    return map[agentName] || agentName;
+  };
+
   const [sessionSearch, setSessionSearch] = useState('');
   const [, setStreamTick] = useState(0);
 
@@ -130,7 +144,7 @@ export default function Sidebar({
           <div className="space-y-1 flex-1 overflow-y-auto pr-1">
             {filteredSessions.length === 0 ? (
               <div className="px-3 py-4 text-center text-[11px] text-gray-500 font-mono">
-                No past sessions yet.
+                {isRTL ? 'لا توجد جلسات سابقة بعد.' : 'No past sessions yet.'}
               </div>
             ) : (
               filteredSessions.map((s) => {
@@ -184,17 +198,17 @@ export default function Sidebar({
         <div className="pt-2 border-t border-card-border/60 shrink-0">
           <div className="flex items-center justify-between px-3 pb-1.5">
             <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 font-mono">
-              {t('nav.active_agents', 'Active Agent')} ({agents.length})
+              {isRTL ? `الوكلاء النشطون (${agents.length})` : `Active Agent (${agents.length})`}
             </span>
             {isAgentNativeModel ? (
               <span className="text-[10px] text-emerald-400 font-mono flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                Active
+                {isRTL ? "نشط" : "Active"}
               </span>
             ) : (
               <span className="text-[10px] text-gray-400 font-mono flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-gray-500" />
-                Overridden
+                {isRTL ? "مخصص" : "Overridden"}
               </span>
             )}
           </div>
@@ -226,7 +240,7 @@ export default function Sidebar({
                     <span className="text-base leading-none shrink-0">{agent.avatar || '🤖'}</span>
                     <div className="truncate">
                       <div className="truncate text-xs flex items-center gap-1.5">
-                        <span className="truncate">{agent.name}</span>
+                        <span className="truncate">{getLocalizedAgentName(agent.name)}</span>
                         {isSelected && !matchesActiveModel && (
                           <span className="text-[9px] font-mono text-gray-400 px-1 rounded bg-[#10131d] border border-white/5 shrink-0">
                             custom
@@ -266,7 +280,7 @@ export default function Sidebar({
           <div className="flex items-center justify-between mb-0.5">
             <div className="flex items-center gap-1.5 truncate">
               <span className="text-sm">{activeAgent?.avatar || '⚡'}</span>
-              <span className="font-semibold text-gray-200 truncate">{activeAgent?.name}</span>
+              <span className="font-semibold text-gray-200 truncate">{getLocalizedAgentName(activeAgent?.name)}</span>
             </div>
             {isAgentNativeModel ? (
               <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
@@ -279,7 +293,7 @@ export default function Sidebar({
             )}
           </div>
           <p className="text-[10px] text-gray-500 line-clamp-1">
-            Engine: {activeModel?.model} {isAgentNativeModel ? '' : `(Default: ${activeAgent?.model_id})`}
+            {isRTL ? 'المحرك:' : 'Engine:'} {activeModel?.model} {isAgentNativeModel ? '' : `(Default: ${activeAgent?.model_id})`}
           </p>
         </div>
       </div>
