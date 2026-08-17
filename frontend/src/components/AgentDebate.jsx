@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { useLanguage } from '../context/LanguageContext.jsx';
 import { 
   Users, 
   Sparkles, 
@@ -145,6 +146,7 @@ export default function AgentDebate({
   onRefreshDocs,
   onRefreshDocuments
 }) {
+  const { language, t, isRTL } = useLanguage();
   const [selectedDocIds, setSelectedDocIds] = useState([]);
   const [selectedAgentIds, setSelectedAgentIds] = useState([]);
   const [leaderId, setLeaderId] = useState(null);
