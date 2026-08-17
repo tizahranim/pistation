@@ -609,13 +609,13 @@ export default function ResourceMonitor({ agents = [], activeModel }) {
                   </div>
                   <div>
                     <span className="font-bold text-xs text-gray-100 uppercase tracking-wider font-mono">
-                      Physical Storage Drives & Partitions ({data?.disks?.length || 2})
+                      {isRTL ? 'أقراص التخزين والأقسام الفعلية' : 'Physical Storage Drives & Partitions'} ({data?.disks?.length || 2})
                     </span>
-                    <div className="text-[10px] text-gray-500 font-mono">Real-time NVMe & SATA SSD Telemetry</div>
+                    <div className="text-[10px] text-gray-500 font-mono">{isRTL ? 'مراقبة فورية لأقراص NVMe و SATA SSD' : 'Real-time NVMe & SATA SSD Telemetry'}</div>
                   </div>
                 </div>
                 <span className="text-[11px] text-cyan-300 font-mono font-bold">
-                  {disk.free_gb} GB Free on Linux Host
+                  {isRTL ? `${disk.free_gb} جيجابايت متبقية على نظام لينكس` : `${disk.free_gb} GB Free on Linux Host`}
                 </span>
               </div>
 
@@ -662,7 +662,7 @@ export default function ResourceMonitor({ agents = [], activeModel }) {
                             ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
                             : 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30'
                         }`}>
-                          {d.status || `${d.percent}% Used`}
+                          {d.status ? (isRTL ? (d.status.includes('Online') ? 'متصل • نشط' : d.status.includes('Ready') ? 'وحدة USB متصلة • جاهزة' : d.status.includes('Dedicated') ? 'قسم مخصص (NTFS)' : d.status) : d.status) : (isRTL ? `${d.percent}% مستخدم` : `${d.percent}% Used`)}
                         </span>
                       </div>
 
@@ -678,8 +678,8 @@ export default function ResourceMonitor({ agents = [], activeModel }) {
                       </div>
 
                       <div className="flex items-center justify-between text-[10px] font-mono text-gray-400">
-                        <span>Used: <strong className="text-gray-200">{d.used_gb} GB</strong> ({d.percent}%)</span>
-                        <span>Free: <strong className={isUsb ? 'text-amber-300' : 'text-cyan-300'}>{d.free_gb} GB</strong> / {d.total_gb} GB</span>
+                        <span>{isRTL ? "المستخدم:" : "Used:"} <strong className="text-gray-200">{d.used_gb} GB</strong> ({d.percent}%)</span>
+                        <span>{isRTL ? "المتبقي:" : "Free:"} <strong className={isUsb ? 'text-amber-300' : 'text-cyan-300'}>{d.free_gb} GB</strong> / {d.total_gb} GB</span>
                       </div>
 
                       {/* Action Buttons: Explore & Eject */}
@@ -691,7 +691,7 @@ export default function ResourceMonitor({ agents = [], activeModel }) {
                           title="Explore files & folders on this drive"
                         >
                           <FolderOpen className="w-2.5 h-2.5 text-cyan-400" />
-                          <span>Explore</span>
+                          <span>{isRTL ? 'استكشاف' : 'Explore'}</span>
                         </button>
 
                         {isUsb ? (
@@ -703,12 +703,12 @@ export default function ResourceMonitor({ agents = [], activeModel }) {
                             title="Safely unmount and power off USB drive"
                           >
                             <Power className={`w-2.5 h-2.5 text-amber-400 ${ejectingDev === d.device ? 'animate-spin' : ''}`} />
-                            <span>{ejectingDev === d.device ? 'Ejecting...' : 'Eject'}</span>
+                            <span>{ejectingDev === d.device ? (isRTL ? 'جاري الإخراج...' : 'Ejecting...') : (isRTL ? 'إخراج' : 'Eject')}</span>
                           </button>
                         ) : (
                           <span className="text-[9px] text-gray-500 flex items-center gap-1" title="Primary OS partition">
                             <Lock className="w-2.5 h-2.5 text-gray-600" />
-                            <span>OS Drive</span>
+                            <span>{isRTL ? 'قرص النظام' : 'OS Drive'}</span>
                           </span>
                         )}
                       </div>
@@ -765,10 +765,10 @@ export default function ResourceMonitor({ agents = [], activeModel }) {
               <div>
                 <h2 className="text-sm font-bold text-gray-100 uppercase tracking-wider font-mono flex items-center gap-2">
                   <Server className="w-4 h-4 text-emerald-400" />
-                  <span>Running Processes & Tasks ({filteredProcesses.length})</span>
+                  <span>{isRTL ? `العمليات والمهام النشطة (${filteredProcesses.length})` : `Running Processes & Tasks (${filteredProcesses.length})`}</span>
                 </h2>
                 <p className="text-xs text-gray-400 mt-0.5">
-                  Inspect memory consumption, CPU load, and terminate runaway background processes.
+                  {isRTL ? 'فحص استهلاك الذاكرة، وحمولة المعالج، وإنهاء العمليات العالقة في الخلفية.' : 'Inspect memory consumption, CPU load, and terminate runaway background processes.'}
                 </p>
               </div>
 
@@ -782,7 +782,7 @@ export default function ResourceMonitor({ agents = [], activeModel }) {
                       selectedFilter === 'all' ? 'bg-emerald-500/20 text-emerald-300 font-bold' : 'text-gray-400 hover:text-gray-200'
                     }`}
                   >
-                    All ({processes.length})
+                    {isRTL ? `الكل (${processes.length})` : `All (${processes.length})`}
                   </button>
                   <button
                     onClick={() => setSelectedFilter('ai')}
@@ -791,7 +791,7 @@ export default function ResourceMonitor({ agents = [], activeModel }) {
                     }`}
                   >
                     <Zap className="w-3 h-3 text-amber-400" />
-                    <span>AI & LLM ({processes.filter(p => p.is_ai).length})</span>
+                    <span>{isRTL ? `الذكاء الاصطناعي والنماذج (${processes.filter(p => p.is_ai).length})` : `AI & LLM (${processes.filter(p => p.is_ai).length})`}</span>
                   </button>
                   <button
                     onClick={() => setSelectedFilter('high_mem')}
@@ -799,7 +799,7 @@ export default function ResourceMonitor({ agents = [], activeModel }) {
                       selectedFilter === 'high_mem' ? 'bg-emerald-500/20 text-emerald-300 font-bold' : 'text-gray-400 hover:text-gray-200'
                     }`}
                   >
-                    &gt;200MB ({processes.filter(p => p.memory_mb > 200).length})
+                    {isRTL ? `> 200 ميغابايت (${processes.filter(p => p.memory_mb > 200).length})` : `>200MB (${processes.filter(p => p.memory_mb > 200).length})`}
                   </button>
                   <button
                     onClick={() => setSelectedFilter('high_cpu')}
@@ -807,7 +807,7 @@ export default function ResourceMonitor({ agents = [], activeModel }) {
                       selectedFilter === 'high_cpu' ? 'bg-emerald-500/20 text-emerald-300 font-bold' : 'text-gray-400 hover:text-gray-200'
                     }`}
                   >
-                    Active CPU ({processes.filter(p => p.cpu_percent > 1.0).length})
+                    {isRTL ? `تستهلك المعالج (${processes.filter(p => p.cpu_percent > 1.0).length})` : `Active CPU (${processes.filter(p => p.cpu_percent > 1.0).length})`}
                   </button>
                 </div>
 
@@ -818,7 +818,7 @@ export default function ResourceMonitor({ agents = [], activeModel }) {
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Filter PID or name..."
+                    placeholder={isRTL ? "...تصفية برقم PID أو الاسم" : "Filter PID or name..."}
                     className="bg-[#151928] border border-card-border rounded-xl pl-8 pr-3 py-1 text-xs text-gray-100 placeholder:text-gray-500 focus:outline-none focus:border-emerald-500/50 font-mono w-48"
                   />
                 </div>
@@ -832,30 +832,30 @@ export default function ResourceMonitor({ agents = [], activeModel }) {
                   <tr className="border-b border-card-border/80 bg-[#121624] text-gray-400 select-none">
                     <th onClick={() => handleSort('pid')} className="py-2.5 px-3 cursor-pointer hover:text-gray-200">
                       <div className="flex items-center gap-1">
-                        <span>PID</span>
+                        <span>{isRTL ? 'المعرف PID' : 'PID'}</span>
                         {sortField === 'pid' && <span>{sortAsc ? '▲' : '▼'}</span>}
                       </div>
                     </th>
                     <th onClick={() => handleSort('name')} className="py-2.5 px-3 cursor-pointer hover:text-gray-200">
                       <div className="flex items-center gap-1">
-                        <span>PROCESS & COMMAND</span>
+                        <span>{isRTL ? 'العملية والأمر' : 'PROCESS & COMMAND'}</span>
                         {sortField === 'name' && <span>{sortAsc ? '▲' : '▼'}</span>}
                       </div>
                     </th>
-                    <th className="py-2.5 px-3">USER</th>
+                    <th className="py-2.5 px-3">{isRTL ? "المستخدم" : "USER"}</th>
                     <th onClick={() => handleSort('cpu_percent')} className="py-2.5 px-3 cursor-pointer hover:text-gray-200">
                       <div className="flex items-center gap-1">
-                        <span>CPU %</span>
+                        <span>{isRTL ? 'المعالج %' : 'CPU %'}</span>
                         {sortField === 'cpu_percent' && <span>{sortAsc ? '▲' : '▼'}</span>}
                       </div>
                     </th>
                     <th onClick={() => handleSort('memory_mb')} className="py-2.5 px-3 cursor-pointer hover:text-gray-200">
                       <div className="flex items-center gap-1">
-                        <span>MEMORY</span>
+                        <span>{isRTL ? 'الذاكرة' : 'MEMORY'}</span>
                         {sortField === 'memory_mb' && <span>{sortAsc ? '▲' : '▼'}</span>}
                       </div>
                     </th>
-                    <th className="py-2.5 px-3 text-right">ACTION</th>
+                    <th className="py-2.5 px-3 text-right">{isRTL ? "الإجراء" : "ACTION"}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-card-border/30">
