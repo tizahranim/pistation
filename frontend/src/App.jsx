@@ -22,6 +22,17 @@ export default function App() {
   const [activeModel, setActiveModel] = useState({ model: 'qwen3.8:27b', provider: 'ollama' });
   const [telemetry, setTelemetry] = useState(null);
   const [activeSessionId, setActiveSessionId] = useState(null);
+  const [queuedPrompt, setQueuedPrompt] = useState(null);
+
+  const handleDispatchQuickPrompt = (prompt, targetAgentId) => {
+    if (targetAgentId) {
+      handleSelectAgentForChat(targetAgentId);
+    } else {
+      setActiveSessionId(null);
+    }
+    setQueuedPrompt(prompt);
+    setActiveTab('chat');
+  };
 
   const fetchAgents = async () => {
     try {
@@ -194,6 +205,7 @@ export default function App() {
               activeModel={activeModel}
               telemetry={telemetry}
               onNewSession={handleNewSession}
+              onDispatchPrompt={handleDispatchQuickPrompt}
             />
           </div>
 
@@ -207,6 +219,8 @@ export default function App() {
               setActiveSessionId={setActiveSessionId}
               onRefreshSessions={fetchSessions}
               onRefreshDocuments={fetchDocuments}
+              queuedPrompt={queuedPrompt}
+              onClearQueuedPrompt={() => setQueuedPrompt(null)}
             />
           </div>
 

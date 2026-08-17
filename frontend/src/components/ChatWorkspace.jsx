@@ -46,7 +46,9 @@ export default function ChatWorkspace({
   activeSessionId, 
   setActiveSessionId, 
   onRefreshSessions, 
-  onRefreshDocuments 
+  onRefreshDocuments,
+  queuedPrompt,
+  onClearQueuedPrompt
 }) {
   const [messages, setMessages] = useState([]);
   const [inputPrompt, setInputPrompt] = useState('');
@@ -465,6 +467,17 @@ export default function ChatWorkspace({
   };
 
   // Auto-send any quick prompts dispatched from the Overview bar
+  useEffect(() => {
+    if (queuedPrompt && queuedPrompt.trim()) {
+      const promptText = queuedPrompt.trim();
+      onClearQueuedPrompt?.();
+      const timer = setTimeout(() => {
+        handleSendMessage(null, promptText);
+      }, 60);
+      return () => clearTimeout(timer);
+    }
+  }, [queuedPrompt]);
+
   useEffect(() => {
     if (pendingQuickPrompts.length === 0) return;
     const prompt = pendingQuickPrompts[0];

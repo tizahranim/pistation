@@ -44,7 +44,8 @@ export default function Overview({
   models = { ollama_models: [], custom_models: [] },
   activeModel,
   telemetry,
-  onNewSession
+  onNewSession,
+  onDispatchPrompt
 }) {
   // 1. Live Time State
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -242,13 +243,17 @@ export default function Overview({
     if (!quickPrompt.trim()) return;
     const prompt = quickPrompt.trim();
     const targetAgentId = agents.some(a => a.id === selectedAgentId) ? selectedAgentId : (agents[0]?.id || null);
-    window.dispatchEvent(new CustomEvent('pi:quick_prompt', { detail: { prompt } }));
     setQuickPrompt('');
-    if (targetAgentId && onSelectAgent) {
-      onSelectAgent(targetAgentId);
+    if (onDispatchPrompt) {
+      onDispatchPrompt(prompt, targetAgentId);
+    } else {
+      window.dispatchEvent(new CustomEvent('pi:quick_prompt', { detail: { prompt } }));
+      if (targetAgentId && onSelectAgent) {
+        onSelectAgent(targetAgentId);
+      }
+      if (onNewSession) onNewSession();
+      setActiveTab('chat');
     }
-    if (onNewSession) onNewSession();
-    setActiveTab('chat');
   };
 
   const currentSelectedAgent = agents.find(a => a.id === selectedAgentId) || agents[0] || { name: 'Pi Lead Agent', avatar: '🤖', id: 'pi-lead' };

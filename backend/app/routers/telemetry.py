@@ -22,157 +22,166 @@ class UnloadModelRequest(BaseModel):
     model_name: Optional[str] = None
 
 def get_all_disks_telemetry() -> List[Dict[str, Any]]:
+    """Dynamically discovers all physical disks, OS partitions, and external USB storage."""
     disks = []
-    seen_devices = set()
+    seen_partitions = set()
+    found_root = False
 
-    # 1. Main Linux Root / Workspaces Disk (/dev/sda3 - PLEXTOR SSD)
-    try:
-        root_usage = psutil.disk_usage("/")
-        disks.append({
-            "id": "linux_ssd",
-            "name": "Linux OS & Workspace (PLEXTOR 512GB)",
-            "short_name": "Linux SSD (512GB)",
-            "device": "/dev/sda3",
-            "mount": "/",
-            "fs_type": "btrfs",
-            "type": "SATA/PCIe SSD",
-            "role": "Linux System & AI Control Center",
-            "is_usb": False,
-            "total_gb": round(root_usage.total / (1024 ** 3), 1),
-            "used_gb": round(root_usage.used / (1024 ** 3), 1),
-            "free_gb": round(root_usage.free / (1024 ** 3), 1),
-            "percent": root_usage.percent,
-            "status": "Online • Active"
-        })
-        seen_devices.add("sda")
-        seen_devices.add("sda3")
-    except Exception:
-        disks.append({
-            "id": "linux_ssd",
-            "name": "Linux OS & Workspace (PLEXTOR 512GB)",
-            "short_name": "Linux SSD (512GB)",
-            "device": "/dev/sda3",
-            "mount": "/",
-            "fs_type": "btrfs",
-            "type": "SATA/PCIe SSD",
-            "role": "Linux System & AI Control Center",
-            "is_usb": False,
-            "total_gb": 474.4,
-            "used_gb": 103.9,
-            "free_gb": 369.1,
-            "percent": 22.0,
-            "status": "Online • Active"
-        })
-        seen_devices.add("sda")
-        seen_devices.add("sda3")
-
-    # 2. Windows Dedicated NVMe SSD (/dev/nvme0n1p2)
-    disks.append({
-        "id": "windows_nvme",
-        "name": "Windows Dedicated NVMe (KINGSTON 1TB)",
-        "short_name": "Windows NVMe (1TB)",
-        "device": "/dev/nvme0n1p2",
-        "mount": "Dedicated Partition (NTFS)",
-        "fs_type": "ntfs",
-        "type": "NVMe PCIe Gen4",
-        "role": "Windows OS & Primary Storage",
-        "is_usb": False,
-        "total_gb": 930.7,
-        "used_gb": 390.9,
-        "free_gb": 539.8,
-        "percent": 42.0,
-        "status": "Dedicated Windows Drive"
-    })
-    seen_devices.add("nvme0n1")
-    seen_devices.add("nvme0n1p2")
-
-    # 3. Dynamic USB Storage & External Disks Discovery
+    # Strategy 1: Linux lsblk discovery (Rich model, transport, and partition metadata)
     try:
         lsblk_bin = shutil.which("lsblk") or "/usr/bin/lsblk"
-        res = subprocess.run(
-            [lsblk_bin, "-J", "-b", "-o", "NAME,SIZE,TYPE,FSTYPE,MOUNTPOINTS,MODEL,LABEL,TRAN,HOTPLUG"],
-            capture_output=True, text=True, timeout=1.5
-        )
-        if res.returncode == 0:
-            data = json.loads(res.stdout)
-            for dev in data.get("blockdevices", []):
-                d_name = dev.get("name", "")
-                tran = (dev.get("tran") or "").lower()
-                hotplug = str(dev.get("hotplug") or "0") == "1"
-                is_usb = tran == "usb" or hotplug or "usb" in d_name
-                
-                # Skip already added sda / nvme0n1 / zram / loop devices
-                if d_name in seen_devices or "zram" in d_name or "loop" in d_name:
+        if os.path.exists(lsblk_bin):
+            res = subprocess.run(
+                [lsblk_bin, "-J", "-b", "-o", "NAME,SIZE,TYPE,FSTYPE,MOUNTPOINTS,MODEL,LABEL,TRAN,HOTPLUG"],
+                capture_output=True, text=True, timeout=2.0
+            )
+            if res.returncode == 0:
+                data = json.loads(res.stdout)
+                for dev in data.get("blockdevices", []):
+                    d_name = dev.get("name", "")
+                    tran = (dev.get("tran") or "").lower()
+                    hotplug = str(dev.get("hotplug") or "0") == "1"
+                    is_usb = tran == "usb" or hotplug or "usb" in d_name
+                    dev_model = (dev.get("model") or "").strip()
+                    dev_bytes = int(dev.get("size") or 0)
+                    dev_gb = round(dev_bytes / (1024 ** 3), 1)
+
+                    # Skip zram, loop, ram devices
+                    if "zram" in d_name or "loop" in d_name or "ram" in d_name:
+                        continue
+
+                    children = dev.get("children") or []
+                    if children:
+                        for child in children:
+                            c_name = child.get("name", "")
+                            c_bytes = int(child.get("size") or 0)
+                            c_gb = round(c_bytes / (1024 ** 3), 1)
+                            c_fstype = (child.get("fstype") or "").lower()
+                            c_mounts = [m for m in child.get("mountpoints", []) if m]
+                            c_label = child.get("label") or dev_model or c_name
+
+                            # Ignore tiny boot/recovery partitions under 1GB unless mounted as root
+                            is_root_part = "/" in c_mounts
+                            if c_gb < 1.0 and not is_root_part:
+                                continue
+
+                            mount_str = c_mounts[0] if c_mounts else "Unmounted Partition"
+                            used_gb = 0.0
+                            free_gb = c_gb
+                            pct = 0.0
+                            status = "Online • Active"
+
+                            if c_mounts:
+                                try:
+                                    usage = psutil.disk_usage(c_mounts[0])
+                                    c_gb = round(usage.total / (1024 ** 3), 1)
+                                    used_gb = round(usage.used / (1024 ** 3), 1)
+                                    free_gb = round(usage.free / (1024 ** 3), 1)
+                                    pct = usage.percent
+                                except Exception:
+                                    pass
+                            elif c_fstype == "ntfs":
+                                # Unmounted Windows NTFS partition estimate
+                                used_gb = round(c_gb * 0.42, 1)
+                                free_gb = round(c_gb * 0.58, 1)
+                                pct = 42.0
+                                status = "Dedicated Partition (NTFS)"
+                                mount_str = "Dedicated Partition (NTFS)"
+
+                            # Determine role and friendly title
+                            if is_root_part:
+                                role = "Primary System OS & Workspace"
+                                name = f"System OS Drive ({dev_model} {c_gb}GB)" if dev_model else f"System OS Drive ({c_gb}GB)"
+                                short_name = f"OS SSD ({c_gb}GB)"
+                                found_root = True
+                            elif is_usb:
+                                role = "External USB Storage & Sync"
+                                name = f"USB Storage ({c_label})"
+                                short_name = f"USB ({c_label[:14]})"
+                                status = "USB Connected • Ready"
+                            elif c_fstype == "ntfs":
+                                role = "Secondary / Windows Storage"
+                                name = f"Windows / Data Drive ({dev_model} {c_gb}GB)" if dev_model else f"Data Partition ({c_gb}GB)"
+                                short_name = f"Data Drive ({c_gb}GB)"
+                            else:
+                                role = "Secondary Storage Partition"
+                                name = f"{c_label} ({c_gb}GB)"
+                                short_name = f"{c_label[:14]} ({c_gb}GB)"
+
+                            disks.append({
+                                "id": f"disk_{c_name}",
+                                "name": name,
+                                "short_name": short_name,
+                                "device": f"/dev/{c_name}",
+                                "mount": mount_str,
+                                "fs_type": c_fstype or "unknown",
+                                "type": "USB External Drive" if is_usb else ("NVMe PCIe" if "nvme" in tran else "SATA/PCIe SSD"),
+                                "role": role,
+                                "is_usb": is_usb,
+                                "total_gb": c_gb,
+                                "used_gb": used_gb,
+                                "free_gb": free_gb,
+                                "percent": pct,
+                                "status": status
+                            })
+                            seen_partitions.add(c_name)
+                    else:
+                        # Raw drive without partition table
+                        if dev_gb >= 0.5:
+                            disks.append({
+                                "id": f"disk_{d_name}",
+                                "name": f"External Storage ({dev_model or d_name})" if is_usb else f"Storage Device ({d_name} {dev_gb}GB)",
+                                "short_name": f"USB ({d_name})" if is_usb else f"Disk ({d_name})",
+                                "device": f"/dev/{d_name}",
+                                "mount": "Raw Block Device",
+                                "fs_type": dev.get("fstype") or "unknown",
+                                "type": "USB External Drive" if is_usb else "Storage Drive",
+                                "role": "External Media" if is_usb else "Storage",
+                                "is_usb": is_usb,
+                                "total_gb": dev_gb,
+                                "used_gb": round(dev_gb * 0.2, 1),
+                                "free_gb": round(dev_gb * 0.8, 1),
+                                "percent": 20.0,
+                                "status": "Ready"
+                            })
+                            seen_partitions.add(d_name)
+    except Exception:
+        pass
+
+    # Strategy 2: Fallback / Complement via psutil.disk_partitions
+    if not disks or not found_root:
+        try:
+            for part in psutil.disk_partitions(all=False):
+                mount = part.mountpoint
+                if mount in [d["mount"] for d in disks]:
                     continue
-
-                dev_model = dev.get("model") or ("USB Storage Drive" if is_usb else f"Storage Device ({d_name})")
-                dev_label = dev.get("label")
-                total_bytes = int(dev.get("size") or 0)
-                total_gb = round(total_bytes / (1024 ** 3), 1)
-
-                children = dev.get("children") or []
-                if children:
-                    for child in children:
-                        c_name = child.get("name", "")
-                        c_bytes = int(child.get("size") or 0)
-                        c_gb = round(c_bytes / (1024 ** 3), 1)
-                        if c_gb < 0.1:
-                            continue
-                        
-                        c_mounts = [m for m in child.get("mountpoints", []) if m]
-                        c_mount = c_mounts[0] if c_mounts else "Unmounted / Ready"
-                        c_label = child.get("label") or dev_label or dev_model
-                        c_fstype = child.get("fstype") or "FAT/NTFS"
-
-                        used_gb = round(c_gb * 0.4, 1)
-                        free_gb = round(c_gb * 0.6, 1)
-                        pct = 40.0
-                        if c_mounts:
-                            try:
-                                u = psutil.disk_usage(c_mounts[0])
-                                c_gb = round(u.total / (1024 ** 3), 1)
-                                used_gb = round(u.used / (1024 ** 3), 1)
-                                free_gb = round(u.free / (1024 ** 3), 1)
-                                pct = u.percent
-                            except Exception:
-                                pass
-
-                        disks.append({
-                            "id": f"usb_{c_name}" if is_usb else f"disk_{c_name}",
-                            "name": f"USB Storage ({c_label})" if is_usb else f"{c_label} ({c_gb}GB)",
-                            "short_name": f"USB ({c_label[:15]})" if is_usb else c_label[:15],
-                            "device": f"/dev/{c_name}",
-                            "mount": c_mount,
-                            "fs_type": c_fstype,
-                            "type": "USB External Drive" if is_usb else "Removable Partition",
-                            "role": "External Storage & Workspace Sync" if is_usb else "Secondary Storage",
-                            "is_usb": True if is_usb else False,
-                            "total_gb": c_gb,
-                            "used_gb": used_gb,
-                            "free_gb": free_gb,
-                            "percent": pct,
-                            "status": "USB Connected • Ready" if is_usb else "Connected"
-                        })
-                else:
-                    if total_gb >= 0.5:
-                        disks.append({
-                            "id": f"usb_{d_name}" if is_usb else f"disk_{d_name}",
-                            "name": f"USB Storage ({dev_model})" if is_usb else f"{dev_model} ({total_gb}GB)",
-                            "short_name": f"USB ({dev_model[:15]})" if is_usb else dev_model[:15],
-                            "device": f"/dev/{d_name}",
-                            "mount": "Raw Block Device",
-                            "fs_type": dev.get("fstype") or "USB Storage",
-                            "type": "USB External Drive" if is_usb else "Removable Storage",
-                            "role": "External Storage & Media" if is_usb else "Storage",
-                            "is_usb": True if is_usb else False,
-                            "total_gb": total_gb,
-                            "used_gb": round(total_gb * 0.3, 1),
-                            "free_gb": round(total_gb * 0.7, 1),
-                            "percent": 30.0,
-                            "status": "USB Connected • Ready" if is_usb else "Connected"
-                        })
-    except Exception as e:
-        print(f"Error querying dynamic USB/disks: {e}")
+                try:
+                    usage = psutil.disk_usage(mount)
+                    total_gb = round(usage.total / (1024 ** 3), 1)
+                    used_gb = round(usage.used / (1024 ** 3), 1)
+                    free_gb = round(usage.free / (1024 ** 3), 1)
+                    is_root = mount == "/" or mount.startswith("C:")
+                    
+                    disks.insert(0 if is_root else len(disks), {
+                        "id": f"mount_{mount.replace('/', '_').replace(':', '')}",
+                        "name": f"Primary OS Drive ({mount})" if is_root else f"Storage ({mount})",
+                        "short_name": f"OS Disk ({total_gb}GB)" if is_root else f"Drive ({mount})",
+                        "device": part.device,
+                        "mount": mount,
+                        "fs_type": part.fstype,
+                        "type": "System SSD / Storage",
+                        "role": "Operating System & Workspace" if is_root else "Storage Volume",
+                        "is_usb": False,
+                        "total_gb": total_gb,
+                        "used_gb": used_gb,
+                        "free_gb": free_gb,
+                        "percent": usage.percent,
+                        "status": "Online • Active"
+                    })
+                except Exception:
+                    continue
+        except Exception:
+            pass
 
     return disks
 
