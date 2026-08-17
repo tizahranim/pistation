@@ -1,5 +1,5 @@
-from fastapi import APIRouter, HTTPException
-from fastapi.responses import StreamingResponse
+from fastapi import APIRouter, HTTPException, Query
+from fastapi.responses import StreamingResponse, Response
 from pydantic import BaseModel
 import json
 import uuid
@@ -354,6 +354,11 @@ class DiscussionParticipateRequest(BaseModel):
     message: str
     target_agent_id: Optional[str] = None
 
+class DiscussionChallengeRequest(BaseModel):
+    message: str
+    challenger_id: str
+    challenged_id: str
+
 @router.post("/discussions/{discussion_id}/participate/stream")
 async def participate_discussion_stream(discussion_id: str, req: DiscussionParticipateRequest):
     async def sse_part_generator():
@@ -365,6 +370,33 @@ async def participate_discussion_stream(discussion_id: str, req: DiscussionParti
             yield f"data: {json.dumps(event)}\n\n"
 
     return StreamingResponse(sse_part_generator(), media_type="text/event-stream")
+
+@router.post("/discussions/{discussion_id}/challenge/stream")
+async def challenge_discussion_stream(discussion_id: str, req: DiscussionChallengeRequest):
+    async def sse_challenge_generator():
+        async for event in MultiAgentOrchestrator.challenge_in_discussion(
+            discussion_id=discussion_id,
+            message=req.message,
+            challenger_id=req.challenger_id,
+            challenged_id=req.challenged_id
+        ):
+            yield f"data: {json.dumps(event)}\n\n"
+
+    return StreamingResponse(sse_challenge_generator(), media_type="text/event-stream")
+
+@router.get("/discussions/{discussion_id}/export")
+async def export_discussion(discussion_id: str, format: str = Query("md")):
+    result = await MultiAgentOrchestrator.export_discussion(discussion_id, format)
+    if "error" in result:
+        raise HTTPException(status_code=404, detail=result["error"])
+    if format == "json":
+        return result
+    filename = f"debate_{discussion_id}.md"
+    return Response(
+        content=result["content"],
+        media_type="text/markdown",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+    )
 
 @router.delete("/discussions/{discussion_id}")
 async def delete_discussion(discussion_id: str):
