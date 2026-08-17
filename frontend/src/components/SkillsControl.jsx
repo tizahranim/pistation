@@ -465,13 +465,13 @@ description: Enter a clear description of what this autonomous capability provid
           </div>
           <div>
             <h1 className="text-base md:text-lg font-bold text-white flex items-center gap-2">
-              <span>Skills & MCP Tools Hub</span>
+              <span>{isRTL ? 'مركز المهارات وأدوات MCP' : 'Skills & MCP Tools Hub'}</span>
               <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono border border-emerald-500/30">
-                {activeCount} Active Skills
+                {isRTL ? `${activeCount} مهارة نشطة` : `${activeCount} Active Skills`}
               </span>
             </h1>
             <p className="text-xs text-gray-400 mt-0.5">
-              Activate or disable agent capability modules, configure Model Context Protocol (MCP) servers, and inspect native tools.
+              {isRTL ? 'تفعيل أو تعطيل وحدات قدرات الوكلاء، تهيئة خوادم بروتوكول سياق النموذج (MCP)، ومعاينة الأدوات المدمجة.' : 'Activate or disable agent capability modules, configure Model Context Protocol (MCP) servers, and inspect native tools.'}
             </p>
           </div>
         </div>
@@ -495,7 +495,7 @@ description: Enter a clear description of what this autonomous capability provid
               className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:brightness-110 text-white font-bold text-xs shadow-lg shadow-purple-600/25 transition-all cursor-pointer"
             >
               <Plus className="w-4 h-4" />
-              <span>New Skill</span>
+              <span>{isRTL ? 'مهارة جديدة' : 'New Skill'}</span>
             </button>
           )}
 
@@ -509,7 +509,7 @@ description: Enter a clear description of what this autonomous capability provid
               className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-teal-600 hover:brightness-110 text-white font-bold text-xs shadow-lg shadow-cyan-600/25 transition-all cursor-pointer"
             >
               <Plus className="w-4 h-4" />
-              <span>Connect MCP Server</span>
+              <span>{isRTL ? 'ربط خادم MCP' : 'Connect MCP Server'}</span>
             </button>
           )}
         </div>
@@ -519,9 +519,9 @@ description: Enter a clear description of what this autonomous capability provid
       <div className="px-5 py-2 border-b border-card-border/60 bg-[#0d101a] flex items-center justify-between gap-4 shrink-0">
         <div className="flex items-center gap-2">
           {[
-            { id: 'skills', label: 'Agent Skills (SKILL.md)', icon: Puzzle, count: `${activeCount}/${skills.length} Active`, color: 'purple' },
-            { id: 'mcp', label: 'Model Context Protocol (MCP)', icon: Server, count: `${mcpServers.length} Servers`, color: 'cyan' },
-            { id: 'tools', label: 'Built-in Native Tools', icon: Cpu, count: `${NATIVE_TOOLS.length} Core`, color: 'emerald' },
+            { id: 'skills', label: isRTL ? 'مهارات الوكلاء (SKILL.md)' : 'Agent Skills (SKILL.md)', icon: Puzzle, count: isRTL ? `${activeCount}/${skills.length} نشطة` : `${activeCount}/${skills.length} Active`, color: 'purple' },
+            { id: 'mcp', label: isRTL ? 'بروتوكول سياق النموذج (MCP)' : 'Model Context Protocol (MCP)', icon: Server, count: isRTL ? `${mcpServers.length} خوادم` : `${mcpServers.length} Servers`, color: 'cyan' },
+            { id: 'tools', label: isRTL ? 'الأدوات المدمجة الأساسية' : 'Built-in Native Tools', icon: Cpu, count: isRTL ? `${NATIVE_TOOLS.length} أدوات` : `${NATIVE_TOOLS.length} Core`, color: 'emerald' },
           ].map(tab => {
             const Icon = tab.icon;
             const isActive = activeHubTab === tab.id;
@@ -549,7 +549,7 @@ description: Enter a clear description of what this autonomous capability provid
 
         <div className="text-[11px] font-mono text-gray-400 hidden sm:flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-          <span>Active Skills Injected into Agents</span>
+          <span>{isRTL ? 'المهارات النشطة المدمجة في الوكلاء' : 'Active Skills Injected into Agents'}</span>
         </div>
       </div>
 
@@ -571,7 +571,7 @@ description: Enter a clear description of what this autonomous capability provid
                     type="text"
                     value={skillsSearch}
                     onChange={(e) => setSkillsSearch(e.target.value)}
-                    placeholder={`Search ${skills.length} skills...`}
+                    placeholder={isRTL ? `...البحث في ${skills.length} مهارة` : `Search ${skills.length} skills...`}
                     className="w-full bg-[#141829] border border-card-border rounded-xl pl-8 pr-7 py-1.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 font-mono"
                   />
                   {skillsSearch && (
@@ -653,7 +653,7 @@ description: Enter a clear description of what this autonomous capability provid
                                 ? 'bg-cyan-500/10 text-cyan-300 border-cyan-500/30'
                                 : 'bg-purple-500/15 text-purple-300 border-purple-500/30'
                             }`}>
-                              {isBuiltin ? 'Built-in' : 'Custom'}
+                              {isBuiltin ? (isRTL ? 'مدمجة' : 'Built-in') : (isRTL ? 'مخصصة' : 'Custom')}
                             </span>
 
                             {/* Activation Toggle Switch Button */}
@@ -688,7 +688,7 @@ description: Enter a clear description of what this autonomous capability provid
                             isActive ? 'text-emerald-400' : 'text-gray-500'
                           }`}>
                             <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-emerald-400' : 'bg-gray-600'}`} />
-                            <span>{isActive ? 'Active' : 'Disabled'}</span>
+                            <span>{isActive ? (isRTL ? 'نشطة' : 'Active') : (isRTL ? 'معطلة' : 'Disabled')}</span>
                           </span>
                         </div>
                       </div>
@@ -720,7 +720,7 @@ description: Enter a clear description of what this autonomous capability provid
                               ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30 font-bold'
                               : 'bg-gray-700/30 text-gray-400 border-gray-600'
                           }`}>
-                            {selectedSkill.is_active !== false ? '● Active' : '○ Disabled'}
+                            {selectedSkill.is_active !== false ? (isRTL ? '● نشطة' : '● Active') : (isRTL ? '○ معطلة' : '○ Disabled')}
                           </span>
                         </div>
                         <div className="text-[10px] text-gray-500 font-mono truncate">{selectedSkill.path}</div>
@@ -739,7 +739,7 @@ description: Enter a clear description of what this autonomous capability provid
                         }`}
                       >
                         <Power className="w-3.5 h-3.5" />
-                        <span>{selectedSkill.is_active !== false ? 'Active' : 'Disabled'}</span>
+                        <span>{selectedSkill.is_active !== false ? (isRTL ? 'نشطة' : 'Active') : (isRTL ? 'معطلة' : 'Disabled')}</span>
                       </button>
 
                       <button
@@ -760,7 +760,7 @@ description: Enter a clear description of what this autonomous capability provid
                         ) : (
                           <Save className="w-3.5 h-3.5" />
                         )}
-                        <span>Save SKILL.md</span>
+                        <span>{isRTL ? 'حفظ SKILL.md' : 'Save SKILL.md'}</span>
                       </button>
                     </div>
                   </div>
@@ -795,7 +795,7 @@ description: Enter a clear description of what this autonomous capability provid
               <div className="flex items-center justify-between">
                 <h3 className="text-xs font-bold font-mono uppercase text-gray-300 flex items-center gap-2">
                   <Server className="w-4 h-4 text-cyan-400" />
-                  <span>Connected MCP Servers ({mcpServers.length})</span>
+                  <span>{isRTL ? `خوادم MCP المتصلة (${mcpServers.length})` : `Connected MCP Servers (${mcpServers.length})`}</span>
                 </h3>
                 <span className="text-[11px] font-mono text-cyan-400">STDIO / SSE Protocol Active</span>
               </div>
