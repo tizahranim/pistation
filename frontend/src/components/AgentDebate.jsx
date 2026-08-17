@@ -1738,6 +1738,53 @@ export default function AgentDebate({
                   <div className="p-4 rounded-2xl bg-[#080a10] border border-white/5 text-xs text-gray-200 font-sans leading-relaxed whitespace-pre-wrap select-text">
                     {finalSynthesis}
                   </div>
+
+                  {/* Post-Verdict Supervisor Follow-up & Round Extension Prompts */}
+                  <div className="pt-3 border-t border-card-border/60 flex items-center justify-between flex-wrap gap-2">
+                    <div className="flex items-center gap-1.5 text-[11px] font-mono text-purple-300">
+                      <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                      <span>Supervisor Next Actions:</span>
+                    </div>
+
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTargetInterventionAgentId('leader');
+                          setInterventionInput('Leader, please trigger an additional focused rebuttal round to address unresolved edge cases.');
+                        }}
+                        className="px-2.5 py-1 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 text-purple-200 text-[11px] font-mono transition-all cursor-pointer flex items-center gap-1"
+                      >
+                        <Plus className="w-3 h-3 text-purple-400" />
+                        <span>Request +1 Rebuttal Round</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTargetInterventionAgentId('leader');
+                          setInterventionInput('Leader, please extract a prioritized 3-step technical implementation roadmap with milestones.');
+                        }}
+                        className="px-2.5 py-1 rounded-xl bg-[#161a2c] hover:bg-[#20263e] border border-card-border text-gray-300 hover:text-white text-[11px] font-mono transition-all cursor-pointer flex items-center gap-1"
+                      >
+                        <Layers className="w-3 h-3 text-cyan-400" />
+                        <span>Clarify 3-Step Roadmap</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const nonLeader = selectedAgentsList.find(a => a.id !== leaderId) || selectedAgentsList[0];
+                          if (nonLeader) setTargetInterventionAgentId(nonLeader.id);
+                          setInterventionInput(`Challenge the Leader's consensus verdict: what are the major hidden risks or points of failure?`);
+                        }}
+                        className="px-2.5 py-1 rounded-xl bg-[#161a2c] hover:bg-[#20263e] border border-card-border text-gray-300 hover:text-rose-300 text-[11px] font-mono transition-all cursor-pointer flex items-center gap-1"
+                      >
+                        <Swords className="w-3 h-3 text-rose-400" />
+                        <span>Challenge Verdict</span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
 
