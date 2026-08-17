@@ -107,6 +107,10 @@ The server binds `0.0.0.0:8000`. Runtime data is written to `data/` relative to 
 |---|---|---|
 | `OLLAMA_BASE_URL` | `http://127.0.0.1:11434` | Ollama server endpoint |
 | `OPENROUTER_API_KEY` | — | OpenRouter API key (takes priority over the auth file) |
+| `OPENAI_API_KEY` | — | Native OpenAI (GPT) API key |
+| `ANTHROPIC_API_KEY` | — | Native Anthropic (Claude) API key |
+| `OPENAI_BASE_URL` | `https://api.openai.com/v1` | OpenAI-compatible endpoint override |
+| `ANTHROPIC_BASE_URL` | `https://api.anthropic.com` | Anthropic API endpoint override |
 | `AGENT_DATA_DIR` | `~/.pi/agent` | Shared agent data folder (sessions, skills, model registry, API keys). Point this anywhere — e.g. `~/.hermes` — to integrate with any other agent, or keep the default to share state with Pi. |
 | `PI_DB_PATH` | `data/control_center.db` | SQLite database location (used by tests) |
 

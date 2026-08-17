@@ -30,6 +30,8 @@ export default function AgentStudio({
   const [activityLogs, setActivityLogs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [openRouterCatalog, setOpenRouterCatalog] = useState([]);
+  const [openaiCatalog, setOpenaiCatalog] = useState([]);
+  const [anthropicCatalog, setAnthropicCatalog] = useState([]);
   const [modelSearch, setModelSearch] = useState('');
   const [customModelInput, setCustomModelInput] = useState('');
 
@@ -55,6 +57,24 @@ export default function AgentStudio({
         }
       })
       .catch(err => console.error('Failed to load OpenRouter catalog:', err));
+
+    fetch('/api/models/openai/catalog')
+      .then(res => res.json())
+      .then(data => {
+        if (data.models && Array.isArray(data.models)) {
+          setOpenaiCatalog(data.models);
+        }
+      })
+      .catch(err => console.error('Failed to load OpenAI catalog:', err));
+
+    fetch('/api/models/anthropic/catalog')
+      .then(res => res.json())
+      .then(data => {
+        if (data.models && Array.isArray(data.models)) {
+          setAnthropicCatalog(data.models);
+        }
+      })
+      .catch(err => console.error('Failed to load Anthropic catalog:', err));
   }, []);
 
   // Fetch activity logs periodically
@@ -112,7 +132,10 @@ export default function AgentStudio({
     e.preventDefault();
     const trimmed = customModelInput.trim();
     if (!trimmed) return;
-    const provider = trimmed.includes('/') ? 'openrouter' : 'ollama';
+    const provider = trimmed.includes('/') || trimmed.startsWith('~') ? 'openrouter'
+      : trimmed.startsWith('claude') ? 'anthropic'
+      : /^(gpt-|o1|o3|o4)/.test(trimmed) ? 'openai'
+      : 'ollama';
     setModelId(trimmed);
     setModelProvider(provider);
     setCustomModelInput('');
@@ -181,6 +204,16 @@ export default function AgentStudio({
   );
 
   const filteredOpenRouter = allOpenRouterList.filter(m =>
+    (m.name || '').toLowerCase().includes(modelSearch.toLowerCase()) ||
+    (m.id || '').toLowerCase().includes(modelSearch.toLowerCase())
+  );
+
+  const filteredOpenAI = openaiCatalog.filter(m =>
+    (m.name || '').toLowerCase().includes(modelSearch.toLowerCase()) ||
+    (m.id || '').toLowerCase().includes(modelSearch.toLowerCase())
+  );
+
+  const filteredAnthropic = anthropicCatalog.filter(m =>
     (m.name || '').toLowerCase().includes(modelSearch.toLowerCase()) ||
     (m.id || '').toLowerCase().includes(modelSearch.toLowerCase())
   );
@@ -504,6 +537,66 @@ export default function AgentStudio({
                           </div>
                           {modelId === m.id && modelProvider === 'openrouter' && (
                             <Check className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* OpenAI Models */}
+                  <div>
+                    <div className="text-[10px] font-mono uppercase text-teal-400 font-semibold px-1.5 py-0.5 border-t border-card-border/50 pt-1.5 mt-1 flex items-center gap-1">
+                      <Zap className="w-3 h-3 text-teal-400" />
+                      <span>OpenAI (Native) ({filteredOpenAI.length} models)</span>
+                    </div>
+                    <div className="space-y-0.5 mt-0.5">
+                      {filteredOpenAI.slice(0, 60).map(m => (
+                        <button
+                          key={m.id}
+                          type="button"
+                          onClick={() => handleSelectModelOption(m.id, 'openai')}
+                          className={`w-full text-left px-2 py-1.5 rounded-lg text-xs flex items-center justify-between transition-colors ${
+                            modelId === m.id && modelProvider === 'openai'
+                              ? 'bg-teal-500/20 text-teal-200 font-semibold border border-teal-500/30'
+                              : 'hover:bg-card-border/50 text-gray-300'
+                          }`}
+                        >
+                          <div className="truncate mr-2">
+                            <span className="font-mono text-xs">{m.name}</span>
+                            <span className="text-[10px] text-gray-500 ml-2 font-mono">{m.id}</span>
+                          </div>
+                          {modelId === m.id && modelProvider === 'openai' && (
+                            <Check className="w-3.5 h-3.5 text-teal-400 shrink-0" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Anthropic Models */}
+                  <div>
+                    <div className="text-[10px] font-mono uppercase text-orange-400 font-semibold px-1.5 py-0.5 border-t border-card-border/50 pt-1.5 mt-1 flex items-center gap-1">
+                      <Sparkles className="w-3 h-3 text-orange-400" />
+                      <span>Anthropic Claude (Native) ({filteredAnthropic.length} models)</span>
+                    </div>
+                    <div className="space-y-0.5 mt-0.5">
+                      {filteredAnthropic.slice(0, 30).map(m => (
+                        <button
+                          key={m.id}
+                          type="button"
+                          onClick={() => handleSelectModelOption(m.id, 'anthropic')}
+                          className={`w-full text-left px-2 py-1.5 rounded-lg text-xs flex items-center justify-between transition-colors ${
+                            modelId === m.id && modelProvider === 'anthropic'
+                              ? 'bg-orange-500/20 text-orange-200 font-semibold border border-orange-500/30'
+                              : 'hover:bg-card-border/50 text-gray-300'
+                          }`}
+                        >
+                          <div className="truncate mr-2">
+                            <span className="font-mono text-xs">{m.name}</span>
+                            <span className="text-[10px] text-gray-500 ml-2 font-mono">{m.id}</span>
+                          </div>
+                          {modelId === m.id && modelProvider === 'anthropic' && (
+                            <Check className="w-3.5 h-3.5 text-orange-400 shrink-0" />
                           )}
                         </button>
                       ))}

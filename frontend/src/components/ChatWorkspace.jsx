@@ -636,7 +636,7 @@ export default function ChatWorkspace({
                           <Zap className="w-2.5 h-2.5 text-amber-400" />
                           <span className="font-medium text-emerald-300 truncate max-w-[150px]">{modelName}</span>
                           <span className="text-[9px] text-gray-500 font-sans">
-                            ({providerName === 'openrouter' ? 'Cloud' : 'Local'})
+                            ({['openrouter', 'openai', 'anthropic'].includes(providerName) ? 'Cloud' : 'Local'})
                           </span>
                         </div>
                       </>

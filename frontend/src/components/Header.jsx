@@ -34,12 +34,14 @@ export default function Header({
   const [searchQuery, setSearchQuery] = useState('');
   const [customModelInput, setCustomModelInput] = useState('');
   const [catalog, setCatalog] = useState([]);
+  const [openaiCatalog, setOpenaiCatalog] = useState([]);
+  const [anthropicCatalog, setAnthropicCatalog] = useState([]);
   const [catalogLoading, setCatalogLoading] = useState(false);
   const [customFinetuneJobs, setCustomFinetuneJobs] = useState([]);
 
   const activeAgent = agents.find(a => a.id === activeAgentId) || agents[0];
 
-  // Fetch full OpenRouter catalog & custom fine-tuned jobs on component mount
+  // Fetch provider catalogs & custom fine-tuned jobs on component mount
   useEffect(() => {
     setCatalogLoading(true);
     fetch('/api/models/openrouter/catalog')
@@ -49,7 +51,25 @@ export default function Header({
           setCatalog(data.models);
         }
       })
-      .catch(err => console.error('Failed to load catalog:', err))
+      .catch(err => console.error('Failed to load catalog:', err));
+
+    fetch('/api/models/openai/catalog')
+      .then(res => res.json())
+      .then(data => {
+        if (data.models && Array.isArray(data.models)) {
+          setOpenaiCatalog(data.models);
+        }
+      })
+      .catch(err => console.error('Failed to load OpenAI catalog:', err));
+
+    fetch('/api/models/anthropic/catalog')
+      .then(res => res.json())
+      .then(data => {
+        if (data.models && Array.isArray(data.models)) {
+          setAnthropicCatalog(data.models);
+        }
+      })
+      .catch(err => console.error('Failed to load Anthropic catalog:', err))
       .finally(() => setCatalogLoading(false));
 
     fetch('/api/finetuning/jobs')
@@ -86,7 +106,10 @@ export default function Header({
     e.preventDefault();
     const trimmed = customModelInput.trim();
     if (!trimmed) return;
-    const provider = trimmed.includes('/') ? 'openrouter' : 'ollama';
+    let provider = 'ollama';
+    if (trimmed.includes('/') || trimmed.startsWith('~')) provider = 'openrouter';
+    else if (trimmed.startsWith('claude')) provider = 'anthropic';
+    else if (/^(gpt-|o1|o3|o4)/.test(trimmed)) provider = 'openai';
     handleSelectModel(trimmed, provider);
   };
 
@@ -125,6 +148,16 @@ export default function Header({
     (m.id || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const filteredOpenAI = openaiCatalog.filter(m => 
+    (m.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
+    (m.id || '').toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredAnthropic = anthropicCatalog.filter(m => 
+    (m.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
+    (m.id || '').toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <header className="h-14 border-b border-card-border bg-card/80 backdrop-blur-md px-4 flex items-center justify-between z-30 select-none">
       {/* Brand & Mode */}
@@ -150,7 +183,7 @@ export default function Header({
               j.target_identifier === activeModel?.model || j.name === activeModel?.model
             );
             const isAgentNative = activeModel?.model === activeAgent?.model_id;
-            const isCloud = activeModel?.provider === 'openrouter' || (activeModel?.model && (activeModel.model.includes('/') || !models?.ollama_models?.some(m => m.id === activeModel.model)));
+            const isCloud = ['openrouter', 'openai', 'anthropic'].includes(activeModel?.provider) || (activeModel?.model && (activeModel.model.includes('/') || activeModel.model.startsWith('claude') || /^(gpt-|o1|o3|o4)/.test(activeModel.model) || !models?.ollama_models?.some(m => m.id === activeModel.model)));
 
             if (activeCustom) {
               return (
@@ -400,7 +433,7 @@ export default function Header({
                     {filteredOpenRouter.length === 0 ? (
                       <div className="px-2 py-2 text-center text-xs text-gray-500 font-mono">No matching models found. Paste ID above.</div>
                     ) : (
-                      filteredOpenRouter.slice(0, 150).map((m) => (
+                      filteredOpenRouter.slice(0, 100).map((m) => (
                         <button
                           key={m.id}
                           onClick={() => handleSelectModel(m.id, 'openrouter')}
@@ -420,6 +453,88 @@ export default function Header({
                             </span>
                             {activeModel?.model === m.id && (
                               <span className="w-1.5 h-1.5 rounded-full bg-sky-400 shadow-sm shadow-sky-400 shrink-0" />
+                            )}
+                          </div>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                {/* 4. OpenAI Native Section */}
+                <div>
+                  <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-teal-400 font-mono flex items-center justify-between border-b border-card-border/40 pb-1 mb-1">
+                    <div className="flex items-center gap-1">
+                      <Zap className="w-3 h-3 text-teal-400" />
+                      <span>OpenAI (Native) ({filteredOpenAI.length})</span>
+                    </div>
+                    {catalogLoading && <span className="text-[9px] text-gray-500 animate-pulse">Loading...</span>}
+                  </div>
+                  <div className="space-y-0.5">
+                    {filteredOpenAI.length === 0 ? (
+                      <div className="px-2 py-2 text-center text-xs text-gray-500 font-mono">No models. Set OPENAI_API_KEY to unlock.</div>
+                    ) : (
+                      filteredOpenAI.slice(0, 60).map((m) => (
+                        <button
+                          key={m.id}
+                          onClick={() => handleSelectModel(m.id, 'openai')}
+                          className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex items-center justify-between transition-colors ${
+                            activeModel?.model === m.id
+                              ? 'bg-teal-500/10 text-teal-300 font-medium border border-teal-500/20'
+                              : 'hover:bg-[#181c2b] text-gray-300'
+                          }`}
+                        >
+                          <div className="truncate mr-2">
+                            <div className="font-mono text-xs font-medium">{m.name}</div>
+                            <div className="text-[10px] text-gray-500 font-mono truncate">{m.id}</div>
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <span className="text-[9px] font-mono font-bold text-teal-400 bg-teal-500/10 px-1.5 py-0.5 rounded border border-teal-500/20">
+                              GPT
+                            </span>
+                            {activeModel?.model === m.id && (
+                              <span className="w-1.5 h-1.5 rounded-full bg-teal-400 shadow-sm shadow-teal-400 shrink-0" />
+                            )}
+                          </div>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                {/* 5. Anthropic Native Section */}
+                <div>
+                  <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-orange-400 font-mono flex items-center justify-between border-b border-card-border/40 pb-1 mb-1">
+                    <div className="flex items-center gap-1">
+                      <Sparkles className="w-3 h-3 text-orange-400" />
+                      <span>Anthropic Claude (Native) ({filteredAnthropic.length})</span>
+                    </div>
+                    {catalogLoading && <span className="text-[9px] text-gray-500 animate-pulse">Loading...</span>}
+                  </div>
+                  <div className="space-y-0.5">
+                    {filteredAnthropic.length === 0 ? (
+                      <div className="px-2 py-2 text-center text-xs text-gray-500 font-mono">No models. Set ANTHROPIC_API_KEY to unlock.</div>
+                    ) : (
+                      filteredAnthropic.slice(0, 30).map((m) => (
+                        <button
+                          key={m.id}
+                          onClick={() => handleSelectModel(m.id, 'anthropic')}
+                          className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex items-center justify-between transition-colors ${
+                            activeModel?.model === m.id
+                              ? 'bg-orange-500/10 text-orange-300 font-medium border border-orange-500/20'
+                              : 'hover:bg-[#181c2b] text-gray-300'
+                          }`}
+                        >
+                          <div className="truncate mr-2">
+                            <div className="font-mono text-xs font-medium">{m.name}</div>
+                            <div className="text-[10px] text-gray-500 font-mono truncate">{m.id}</div>
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <span className="text-[9px] font-mono font-bold text-orange-400 bg-orange-500/10 px-1.5 py-0.5 rounded border border-orange-500/20">
+                              CLAUDE
+                            </span>
+                            {activeModel?.model === m.id && (
+                              <span className="w-1.5 h-1.5 rounded-full bg-orange-400 shadow-sm shadow-orange-400 shrink-0" />
                             )}
                           </div>
                         </button>

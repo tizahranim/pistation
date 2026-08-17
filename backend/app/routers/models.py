@@ -55,9 +55,26 @@ async def get_all_models():
     }
 
 from app.services.llm_router import LLMRouter
+from app.config import OPENAI_BASE_URL
 
 cached_openrouter_models = []
 last_openrouter_fetch = 0
+cached_openai_models = []
+last_openai_fetch = 0
+cached_anthropic_models = []
+last_anthropic_fetch = 0
+
+def _is_cache_fresh(cache, last_fetch, now):
+    return bool(cache) and (now - last_fetch < 3600)
+
+ANTHROPIC_STATIC_MODELS = [
+    {"id": "claude-opus-4-1", "name": "Claude Opus 4.1", "context_length": 200000, "provider": "anthropic"},
+    {"id": "claude-sonnet-4-5", "name": "Claude Sonnet 4.5", "context_length": 200000, "provider": "anthropic"},
+    {"id": "claude-sonnet-4", "name": "Claude Sonnet 4", "context_length": 200000, "provider": "anthropic"},
+    {"id": "claude-haiku-4-5", "name": "Claude Haiku 4.5", "context_length": 200000, "provider": "anthropic"},
+    {"id": "claude-3-7-sonnet-20250219", "name": "Claude 3.7 Sonnet", "context_length": 200000, "provider": "anthropic"},
+    {"id": "claude-3-5-haiku-20241022", "name": "Claude 3.5 Haiku", "context_length": 200000, "provider": "anthropic"},
+]
 
 @router.get("/openrouter/catalog")
 async def get_openrouter_catalog():
@@ -94,6 +111,69 @@ async def get_openrouter_catalog():
 
     return {"models": cached_openrouter_models}
 
+@router.get("/openai/catalog")
+async def get_openai_catalog():
+    global cached_openai_models, last_openai_fetch
+    import time
+    now = time.time()
+    if _is_cache_fresh(cached_openai_models, last_openai_fetch, now):
+        return {"models": cached_openai_models}
+
+    try:
+        key = LLMRouter.get_openai_api_key()
+        headers = {"Authorization": f"Bearer {key}"} if key else {}
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            res = await client.get(OPENAI_BASE_URL.rstrip("/") + "/models", headers=headers)
+            if res.status_code == 200:
+                data = res.json()
+                models = []
+                for m in data.get("data", []):
+                    models.append({
+                        "id": m.get("id"),
+                        "name": m.get("id", "").replace("gpt-", "GPT ").replace("-", " ").title(),
+                        "context_length": 128000,
+                        "provider": "openai"
+                    })
+                cached_openai_models = models
+                last_openai_fetch = now
+                return {"models": models}
+    except Exception as e:
+        print(f"Error fetching OpenAI catalog: {e}")
+
+    return {"models": cached_openai_models}
+
+@router.get("/anthropic/catalog")
+async def get_anthropic_catalog():
+    global cached_anthropic_models, last_anthropic_fetch
+    import time
+    now = time.time()
+    if _is_cache_fresh(cached_anthropic_models, last_anthropic_fetch, now):
+        return {"models": cached_anthropic_models}
+
+    try:
+        key = LLMRouter.get_anthropic_api_key()
+        headers = {"x-api-key": key, "anthropic-version": "2023-06-01"} if key else {}
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            res = await client.get("https://api.anthropic.com/v1/models", headers=headers)
+            if res.status_code == 200:
+                data = res.json()
+                models = []
+                for m in data.get("data", []):
+                    models.append({
+                        "id": m.get("id"),
+                        "name": m.get("id", "").replace("claude-", "Claude ").replace("-", " ").title(),
+                        "context_length": m.get("context_window") or 200000,
+                        "provider": "anthropic"
+                    })
+                cached_anthropic_models = models
+                last_anthropic_fetch = now
+                return {"models": models}
+    except Exception as e:
+        print(f"Error fetching Anthropic catalog: {e}")
+
+    cached_anthropic_models = ANTHROPIC_STATIC_MODELS
+    return {"models": ANTHROPIC_STATIC_MODELS}
+
 @router.post("/active")
 async def set_active_model(req: ActiveModelRequest):
     settings = {}
@@ -112,14 +192,14 @@ async def set_active_model(req: ActiveModelRequest):
     with open(PI_SETTINGS_PATH, "w") as f:
         json.dump(settings, f, indent=2)
 
-    # If OpenRouter custom model, also persist to models.json so Pi recognizes it
-    if req.provider == "openrouter" and PI_MODELS_PATH.exists():
+    # If a cloud model, also persist to models.json so other agents recognize it
+    if req.provider in ("openrouter", "openai", "anthropic") and PI_MODELS_PATH.exists():
         try:
             with open(PI_MODELS_PATH, "r") as f:
                 data = json.load(f)
-            or_models = data.setdefault("providers", {}).setdefault("openrouter", {}).setdefault("models", [])
-            if not any(m.get("id") == req.model_id for m in or_models):
-                or_models.append({
+            prov_models = data.setdefault("providers", {}).setdefault(req.provider, {}).setdefault("models", [])
+            if not any(m.get("id") == req.model_id for m in prov_models):
+                prov_models.append({
                     "id": req.model_id,
                     "name": req.model_id.split("/")[-1].replace("-", " ").title(),
                     "contextWindow": 131072,
