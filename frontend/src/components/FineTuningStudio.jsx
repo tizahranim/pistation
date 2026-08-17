@@ -925,10 +925,10 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
           </div>
           <div>
             <h1 className="text-base font-bold text-gray-100 flex items-center gap-2">
-              <span>Fine-Tuning Studio</span>
+              <span>{isRTL ? 'استوديو الضبط الدقيق للنماذج' : 'Fine-Tuning Studio'}</span>
             </h1>
             <p className="text-xs text-gray-400">
-              Distill specialized intelligence from frontier cloud AI into local models on your dual RTX 5070 GPUs.
+              {isRTL ? 'تقطير الذكاء التخصصي من النماذج السحابية الرائدة وتدريبه في النماذج المحلية على بطاقتي RTX 5070.' : 'Distill specialized intelligence from frontier cloud AI into local models on your dual RTX 5070 GPUs.'}
             </p>
           </div>
         </div>
@@ -954,7 +954,7 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
               title="Automated training flow based on evaluated weaknesses"
             >
               <Wand2 className="w-3.5 h-3.5" />
-              <span>Auto Training</span>
+              <span>{isRTL ? 'التدريب الآلي (Auto-Pilot)' : 'Auto Training'}</span>
             </button>
 
             {/* Mode 2: Manual Training */}
@@ -966,7 +966,7 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
               title="Manual training with attached datasets"
             >
               <Paperclip className="w-3.5 h-3.5" />
-              <span>Manual Training</span>
+              <span>{isRTL ? 'التدريب اليدوي' : 'Manual Training'}</span>
             </button>
 
             {/* Mode 3: Custom Dataset Hub */}
@@ -978,7 +978,7 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
               title="View, edit, generate, and manage custom datasets"
             >
               <Database className="w-3.5 h-3.5" />
-              <span>Dataset Hub ({datasets.length})</span>
+              <span>{isRTL ? `مركز البيانات (${datasets.length})` : `Dataset Hub (${datasets.length})`}</span>
             </button>
 
             {/* Mode 4: Testing Arena */}
@@ -989,7 +989,7 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
               }`}
             >
               <Swords className="w-3.5 h-3.5" />
-              <span>Testing Arena</span>
+              <span>{isRTL ? 'ساحة الاختبار والمقارنة' : 'Testing Arena'}</span>
             </button>
           </div>
         </div>
@@ -1003,14 +1003,14 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
           <div className="w-64 border-r border-card-border bg-[#0d0f18] p-3 flex flex-col justify-between shrink-0 overflow-hidden">
             <div className="space-y-3 flex-1 overflow-hidden flex flex-col">
               <div className="px-2 text-[10px] font-bold uppercase tracking-wider text-gray-400 font-mono flex items-center justify-between">
-                <span>Custom Models</span>
+                <span>{isRTL ? 'النماذج المخصصة' : 'Custom Models'}</span>
                 <span className="text-purple-400">({jobs.length})</span>
               </div>
 
               <div className="space-y-1.5 flex-1 overflow-y-auto pr-1">
                 {jobs.length === 0 ? (
                   <div className="p-4 text-center text-xs text-gray-500 font-mono">
-                    No custom models yet. Click "New Fine-Tuning".
+                    {isRTL ? 'لا توجد نماذج مخصصة بعد. اضغط بدء تدريب جديد.' : 'No custom models yet. Click "New Fine-Tuning".'}
                   </div>
                 ) : (
                   jobs.map(j => {
@@ -1071,10 +1071,10 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
                   <div className="border-b border-card-border pb-3">
                     <h2 className="text-base font-bold text-gray-100 flex items-center gap-2">
                       <Wand2 className="w-4 h-4 text-purple-400" />
-                      <span>Auto Training (Weakness-Driven)</span>
+                      <span>{isRTL ? 'التدريب الآلي الموجه بنقاط الضعف' : 'Auto Training (Weakness-Driven)'}</span>
                     </h2>
                     <p className="text-xs text-gray-400 mt-0.5">
-                      Teacher AI evaluates local baseline weaknesses, generates fix data, and registers the fine-tuned model.
+                      {isRTL ? 'يقوم النموذج المعلم بتقييم نقاط الضعف في النموذج المحلي، وتوليد بيانات معالجة، وتسجيل النموذج المدرب في Ollama.' : 'Teacher AI evaluates local baseline weaknesses, generates fix data, and registers the fine-tuned model.'}
                     </p>
                   </div>
 
@@ -1086,7 +1086,7 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2 text-indigo-300 font-bold font-mono">
                             <Globe className="w-4 h-4" />
-                            <span>1. Teacher Model (Cloud AI)</span>
+                            <span>{isRTL ? '1. النموذج المعلم (الذكاء السحابي)' : '1. Teacher Model (Cloud AI)'}</span>
                           </div>
                           <span className="text-[10px] text-gray-500 font-mono">OpenRouter</span>
                         </div>
@@ -1098,7 +1098,7 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
                         >
                           <div className="truncate mr-2">
                             <div className="font-bold text-xs text-indigo-200 truncate">{trainerModel}</div>
-                            <div className="text-[10px] text-gray-500 font-mono">Click to change or paste model ID</div>
+                            <div className="text-[10px] text-gray-500 font-mono">{isRTL ? 'اضغط للتغيير أو لصق معرّف النموذج' : 'Click to change or paste model ID'}</div>
                           </div>
                           <Search className="w-3.5 h-3.5 text-gray-400 group-hover:text-indigo-300 shrink-0" />
                         </div>
@@ -1109,7 +1109,7 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2 text-emerald-300 font-bold font-mono">
                             <Cpu className="w-4 h-4" />
-                            <span>2. Student Model (Local Base)</span>
+                            <span>{isRTL ? '2. النموذج الطالب (الأساس المحلي)' : '2. Student Model (Local Base)'}</span>
                           </div>
                           <span className="text-[10px] text-gray-500 font-mono">Local Ollama</span>
                         </div>
@@ -1135,7 +1135,7 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
                     {/* Custom Model Name & Domain Specialization */}
                     <div className="space-y-3 p-4 rounded-xl bg-[#141828] border border-card-border">
                       <div className="space-y-1">
-                        <label className="text-[11px] font-bold text-gray-300 font-mono">Custom Model Name</label>
+                        <label className="text-[11px] font-bold text-gray-300 font-mono">{isRTL ? 'اسم النموذج المخصص' : 'Custom Model Name'}</label>
                         <input
                           type="text"
                           value={jobName}
@@ -1152,7 +1152,7 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
                           <label className="text-[11px] font-bold text-gray-300 font-mono">
                             What Skill / Topic Should It Learn?
                           </label>
-                          <span className="text-[10px] text-gray-500 font-mono">Click a preset or type your own</span>
+                          <span className="text-[10px] text-gray-500 font-mono">{isRTL ? 'اختر تخصصاً جاهزاً أو اكتب تخصصك' : 'Click a preset or type your own'}</span>
                         </div>
 
                         {/* Quick Presets with Dynamic Names */}
@@ -1194,7 +1194,7 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[11px] font-bold text-purple-300 font-mono">Ollama Model Tag / Identifier</label>
+                        <label className="text-[11px] font-bold text-purple-300 font-mono">{isRTL ? 'معرّف النموذج في Ollama (Tag)' : 'Ollama Model Tag / Identifier'}</label>
                         <input
                           type="text"
                           value={targetIdentifier}
@@ -1213,7 +1213,7 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
                         className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold font-mono transition-all shadow-lg shadow-purple-900/40 flex items-center gap-2 cursor-pointer"
                       >
                         {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4 fill-current" />}
-                        <span>Start</span>
+                        <span>{isRTL ? 'بدء' : 'Start'}</span>
                       </button>
                     </div>
                   </form>
@@ -1232,16 +1232,16 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
                         </span>
                       </div>
                       <p className="text-xs text-gray-400 mt-1 font-mono">
-                        Target: <span className="text-purple-300 font-bold">{currentJob.target_identifier}</span> • Focus: {currentJob.domain_focus}
+                        {isRTL ? 'الهدف:' : 'Target:'} <span className="text-purple-300 font-bold">{currentJob.target_identifier}</span> • {isRTL ? 'التركيز:' : 'Focus:'} {currentJob.domain_focus}
                       </p>
                     </div>
 
                     <div className="flex items-center gap-2 text-xs font-mono">
                       <span className="px-2.5 py-1 rounded-lg bg-[#151928] text-indigo-300 border border-indigo-500/30">
-                        Teacher: {currentJob.trainer_model}
+                        {isRTL ? 'المعلم:' : 'Teacher:'} {currentJob.trainer_model}
                       </span>
                       <span className="px-2.5 py-1 rounded-lg bg-[#151928] text-emerald-300 border border-emerald-500/30">
-                        Base: {currentJob.trainee_model}
+                        {isRTL ? 'الأساسي:' : 'Base:'} {currentJob.trainee_model}
                       </span>
                       {(currentJob.status === 'trained' || currentJob.status === 'completed') && (
                         <button
@@ -1251,7 +1251,7 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
                           title="Use this model as the base for a new fine-tuning version (v2)"
                         >
                           <RefreshCw className="w-3 h-3 text-purple-300" />
-                          <span>Iterate (v2)</span>
+                          <span>{isRTL ? 'تدريب إصدار أحدث (v2)' : 'Iterate (v2)'}</span>
                         </button>
                       )}
                       <button
@@ -1447,11 +1447,11 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
                         </div>
                         <div>
                           <div className="font-bold text-sm text-gray-100 flex items-center gap-2 font-mono">
-                            <span>Autonomous Wizard Auto-Pilot</span>
-                            <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">1-Click Continuous</span>
+                            <span>{isRTL ? 'المعالج الذكي للتدريب التلقائي الكامل' : 'Autonomous Wizard Auto-Pilot'}</span>
+                            <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">{isRTL ? 'تشغيل مستمر بنقرة واحدة' : '1-Click Continuous'}</span>
                           </div>
                           <p className="text-xs text-gray-400 mt-0.5">
-                            Automatically executes Step 1 (Baseline) ➔ Step 2 (Synthesis) ➔ Step 3 (Unsloth QLoRA) ➔ Step 4 (Scorecard) without stopping.
+                            {isRTL ? 'ينفذ تلقائياً الخطوة 1 (التقييم الأولي) ➔ الخطوة 2 (توليد البيانات) ➔ الخطوة 3 (تدريب Unsloth) ➔ الخطوة 4 (بطاقة النتائج) دون توقف.' : 'Automatically executes Step 1 (Baseline) ➔ Step 2 (Synthesis) ➔ Step 3 (Unsloth QLoRA) ➔ Step 4 (Scorecard) without stopping.'}
                           </p>
                         </div>
                       </div>
@@ -1465,12 +1465,12 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
                         {runningAction === 'auto_wizard' ? (
                           <>
                             <Loader2 className="w-4 h-4 animate-spin" />
-                            <span>Auto Wizard In Progress...</span>
+                            <span>{isRTL ? 'جاري تنفيذ المعالج التلقائي...' : 'Auto Wizard In Progress...'}</span>
                           </>
                         ) : (
                           <>
                             <Play className="w-4 h-4 fill-current" />
-                            <span>Run Full 4-Step Auto Pipeline</span>
+                            <span>{isRTL ? 'تشغيل خط أنابيب التدريب الآلي الكامل' : 'Run Full 4-Step Auto Pipeline'}</span>
                           </>
                         )}
                       </button>
@@ -1486,15 +1486,15 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
                         </div>
                         <div>
                           <div className="font-bold text-sm text-gray-100 flex items-center gap-2">
-                            <span>Step 1: Baseline Capability Assessment</span>
+                            <span>{isRTL ? 'الخطوة 1: التقييم الأولي للقدرات' : 'Step 1: Baseline Capability Assessment'}</span>
                             {hasPreEval && (
                               <span className="text-xs text-emerald-400 font-mono">
-                                (Baseline Score: {preEval.overall_score}/100)
+                                ({isRTL ? 'الدرجة الأولية:' : 'Baseline Score:'} {preEval.overall_score}/100)
                               </span>
                             )}
                           </div>
                           <p className="text-xs text-gray-400">
-                            Teacher AI tests base model on 3 domain questions to measure baseline skills.
+                            {isRTL ? 'النموذج المعلم يختبر النموذج الأساسي في 3 أسئلة تخصصية لقياس المهارات الأولية.' : 'Teacher AI tests base model on 3 domain questions to measure baseline skills.'}
                           </p>
                         </div>
                       </div>
@@ -1505,7 +1505,7 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
                         className="px-4 py-2 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/40 text-indigo-200 text-xs font-bold font-mono transition-all flex items-center gap-1.5 disabled:opacity-50"
                       >
                         {runningAction === 'pre_eval' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5 fill-current" />}
-                        <span>{runningAction === 'pre_eval' ? 'Assessing...' : hasPreEval ? 'Re-Run Baseline Eval' : 'Run Baseline Eval'}</span>
+                        <span>{runningAction === 'pre_eval' ? (isRTL ? 'جاري التقييم...' : 'Assessing...') : hasPreEval ? (isRTL ? 'إعادة التقييم الأولي' : 'Re-Run Baseline Eval') : (isRTL ? 'بدء التقييم الأولي' : 'Run Baseline Eval')}</span>
                       </button>
                     </div>
 
@@ -1519,13 +1519,13 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
                         </div>
                         <div>
                           <div className="font-bold text-sm text-gray-100 flex items-center gap-2">
-                            <span>Step 2: Targeted Dataset Synthesis</span>
+                            <span>{isRTL ? 'الخطوة 2: توليد بيانات تدريبية موجهة' : 'Step 2: Targeted Dataset Synthesis'}</span>
                             {currentJob.dataset_id && (
-                              <span className="text-xs text-purple-300 font-mono">(Dataset Ready)</span>
+                              <span className="text-xs text-purple-300 font-mono">{isRTL ? '(البيانات جاهزة)' : '(Dataset Ready)'}</span>
                             )}
                           </div>
                           <p className="text-xs text-gray-400">
-                            Teacher AI creates tailored instruction-tuning pairs solving baseline weaknesses.
+                            {isRTL ? 'النموذج المعلم يولد أزواج تعليمات دقيقة تعالج نقاط الضعف المكتشفة.' : 'Teacher AI creates tailored instruction-tuning pairs solving baseline weaknesses.'}
                           </p>
                         </div>
                       </div>
@@ -1536,7 +1536,7 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
                         className="px-4 py-2 rounded-xl bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/40 text-purple-200 text-xs font-bold font-mono transition-all flex items-center gap-1.5 disabled:opacity-50"
                       >
                         {runningAction === 'synthesize' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-                        <span>{runningAction === 'synthesize' ? 'Synthesizing...' : 'Synthesize Training Pairs'}</span>
+                        <span>{runningAction === 'synthesize' ? (isRTL ? 'جاري التوليد...' : 'Synthesizing...') : (isRTL ? 'توليد أزواج التدريب' : 'Synthesize Training Pairs')}</span>
                       </button>
                     </div>
 
@@ -1553,15 +1553,15 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
                           </div>
                           <div>
                             <div className="font-bold text-sm text-gray-100 flex items-center gap-2">
-                              <span>Step 3: 🦥 Unsloth Fast QLoRA GPU Training</span>
+                              <span>{isRTL ? 'الخطوة 3: 🦥 تدريب QLoRA فائق السرعة عبر Unsloth' : 'Step 3: 🦥 Unsloth Fast QLoRA GPU Training'}</span>
                               {(currentJob.status === 'trained' || currentJob.status === 'completed') && (
                                 <span className="text-xs text-emerald-400 font-mono">
-                                  (Registered as {currentJob.target_identifier})
+                                  ({isRTL ? 'مسجل باسم' : 'Registered as'} {currentJob.target_identifier})
                                 </span>
                               )}
                             </div>
                             <p className="text-xs text-gray-400">
-                              Trains real neural network adapter weights across Dual RTX 5070 GPUs using Unsloth OpenAI Triton kernels.
+                              {isRTL ? 'تدريب أوزان الشبكة العصبية عبر بطاقتي RTX 5070 باستخدام نوى Triton فائقة السرعة.' : 'Trains real neural network adapter weights across Dual RTX 5070 GPUs using Unsloth OpenAI Triton kernels.'}
                             </p>
                           </div>
                         </div>
@@ -1577,7 +1577,7 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
                           ) : (
                             <Sparkles className="w-4 h-4" />
                           )}
-                          <span>{runningAction === 'training_lora' ? 'Unsloth Training Active...' : 'Start Unsloth QLoRA Training'}</span>
+                          <span>{runningAction === 'training_lora' ? (isRTL ? 'جاري تدريب Unsloth...' : 'Unsloth Training Active...') : (isRTL ? 'بدء تدريب Unsloth QLoRA' : 'Start Unsloth QLoRA Training')}</span>
                         </button>
                       </div>
 
@@ -1641,15 +1641,15 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
                         </div>
                         <div>
                           <div className="font-bold text-sm text-gray-100 flex items-center gap-2">
-                            <span>Step 4: Post-Training Capability Assessment</span>
+                            <span>{isRTL ? 'الخطوة 4: تقييم القدرات بعد التدريب' : 'Step 4: Post-Training Capability Assessment'}</span>
                             {hasPostEval && (
                               <span className="text-xs text-pink-400 font-mono">
-                                (Score: {postEval.overall_score}/100 • +{postEval.improvement_percentage}% Delta)
+                                ({isRTL ? 'الدرجة:' : 'Score:'} {postEval.overall_score}/100 • {isRTL ? 'تحسن' : '+'} {postEval.improvement_percentage}%)
                               </span>
                             )}
                           </div>
                           <p className="text-xs text-gray-400">
-                            Teacher AI evaluates the fine-tuned model and produces the Before vs After matrix.
+                            {isRTL ? 'النموذج المعلم يقيّم النموذج المدرب ويولد مصفوفة مقارنة الأداء قبل وبعد التدريب.' : 'Teacher AI evaluates the fine-tuned model and produces the Before vs After matrix.'}
                           </p>
                         </div>
                       </div>
@@ -1660,7 +1660,7 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
                         className="px-4 py-2 rounded-xl bg-pink-600/20 hover:bg-pink-600/30 border border-pink-500/40 text-pink-200 text-xs font-bold font-mono transition-all flex items-center gap-1.5 disabled:opacity-50"
                       >
                         {runningAction === 'post_eval' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <TrendingUp className="w-3.5 h-3.5" />}
-                        <span>{runningAction === 'post_eval' ? 'Evaluating...' : hasPostEval ? 'Re-Evaluate Delta' : 'Run Post-Eval'}</span>
+                        <span>{runningAction === 'post_eval' ? (isRTL ? 'جاري التقييم...' : 'Evaluating...') : hasPostEval ? (isRTL ? 'إعادة قياس نسبة التحسن' : 'Re-Evaluate Delta') : (isRTL ? 'بدء التقييم البعدي' : 'Run Post-Eval')}</span>
                       </button>
                     </div>
 
@@ -1673,12 +1673,12 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
                         <div className="flex items-center gap-2">
                           <TrendingUp className="w-4 h-4 text-purple-400" />
                           <h3 className="font-bold text-sm text-gray-100 font-mono uppercase tracking-wider">
-                            Before vs After Capability Comparison
+                            {isRTL ? 'مقارنة القدرات قبل وبعد التدريب' : 'Before vs After Capability Comparison'}
                           </h3>
                         </div>
                         {hasPostEval && postEval.improvement_percentage !== undefined && (
                           <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono font-bold text-xs">
-                            +{postEval.improvement_percentage}% Improvement Delta
+                            {isRTL ? `نسبة التحسن الإجمالي +${postEval.improvement_percentage}%` : `+${postEval.improvement_percentage}% Improvement Delta`}
                           </span>
                         )}
                       </div>
@@ -1715,7 +1715,7 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
 
                       {postEval.key_improvements && (
                         <div className="p-3 rounded-xl bg-[#121c22] border border-emerald-500/30 text-xs space-y-1">
-                          <div className="font-bold text-emerald-300 font-mono">Teacher Judge Feedback:</div>
+                          <div className="font-bold text-emerald-300 font-mono">{isRTL ? 'ملاحظات تقييم النموذج المعلم:' : 'Teacher Judge Feedback:'}</div>
                           {postEval.executive_summary && (
                             <p className="text-gray-300 text-xs italic mb-1">{postEval.executive_summary}</p>
                           )}
@@ -1756,7 +1756,7 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
                                     <div className="p-2.5 rounded-lg bg-[#0c0e17] border border-card-border space-y-1">
                                       <span className="text-[10px] uppercase font-mono text-gray-400 font-bold">
-                                        Base Model Response (Before)
+                                        {isRTL ? 'إجابة النموذج الأساسي (قبل التدريب)' : 'Base Model Response (Before)'}
                                       </span>
                                       <div className="text-gray-300 font-mono text-[11px] whitespace-pre-wrap max-h-40 overflow-y-auto leading-relaxed">
                                         {sample.base_answer || 'No response captured.'}
@@ -1765,7 +1765,7 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
 
                                     <div className="p-2.5 rounded-lg bg-[#0e1722] border border-emerald-500/30 space-y-1">
                                       <span className="text-[10px] uppercase font-mono text-emerald-400 font-bold">
-                                        Fine-Tuned Model Response (After)
+                                        {isRTL ? 'إجابة النموذج المخصص (بعد التدريب)' : 'Fine-Tuned Model Response (After)'}
                                       </span>
                                       <div className="text-gray-200 font-mono text-[11px] whitespace-pre-wrap max-h-40 overflow-y-auto leading-relaxed">
                                         {sample.finetuned_answer || 'No response captured.'}
@@ -1782,7 +1782,7 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
                       {/* Advanced Training / Follow-up Iteration */}
                       <div className="pt-3 border-t border-card-border flex items-center justify-between">
                         <div className="text-xs text-gray-400">
-                          Want to train further on top of this model? Launch advanced iterations.
+                          {isRTL ? 'هل ترغب في مواصلة تدريب النموذج؟ أطلق إصدارات متقدمة.' : 'Want to train further on top of this model? Launch advanced iterations.'}
                         </div>
                         <button
                           type="button"
@@ -1790,7 +1790,7 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
                           className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-mono text-xs font-bold transition-all flex items-center gap-1.5 shadow-md cursor-pointer"
                         >
                           <RefreshCw className="w-3.5 h-3.5" />
-                          <span>Advanced training ({currentJob.name} v2)</span>
+                          <span>{isRTL ? `تدريب متقدم (${currentJob.name} v2)` : `Advanced training (${currentJob.name} v2)`}</span>
                         </button>
                       </div>
                     </div>
@@ -1809,7 +1809,7 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
                 <div className="border-b border-card-border pb-3">
                   <h2 className="text-base font-bold text-gray-100 flex items-center gap-2">
                     <Paperclip className="w-4 h-4 text-indigo-400" />
-                    <span>Manual Training</span>
+                    <span>{isRTL ? 'التدريب اليدوي' : 'Manual Training'}</span>
                   </h2>
                   <p className="text-xs text-gray-400 mt-0.5">
                     Select your local base model, attach a dataset from your Dataset Hub, and launch QLoRA fine-tuning.
@@ -1819,7 +1819,7 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
                 <div className="space-y-4 text-xs">
                   {/* Base Model Selection */}
                   <div className="p-4 rounded-xl bg-[#141828] border border-card-border space-y-2">
-                    <label className="text-[11px] font-bold text-emerald-300 font-mono">Base Model to Fine-Tune (Local GPU)</label>
+                    <label className="text-[11px] font-bold text-emerald-300 font-mono">{isRTL ? 'النموذج الأساسي للتدريب (GPU محلي)' : 'Base Model to Fine-Tune (Local GPU)'}</label>
                     <select
                       value={traineeModel}
                       onChange={(e) => {
@@ -1841,7 +1841,7 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
                   {/* Model Name & Tag */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-gray-300 font-mono">Custom Model Name</label>
+                      <label className="text-[11px] font-bold text-gray-300 font-mono">{isRTL ? 'اسم النموذج المخصص' : 'Custom Model Name'}</label>
                       <input
                         type="text"
                         value={jobName}
@@ -1867,14 +1867,14 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
                     <div className="flex items-center justify-between">
                       <label className="text-[11px] font-bold text-gray-200 font-mono flex items-center gap-1.5">
                         <Database className="w-3.5 h-3.5 text-indigo-400" />
-                        <span>Select Available Dataset from Hub</span>
+                        <span>{isRTL ? 'اختر مجموعة البيانات من المركز' : 'Select Available Dataset from Hub'}</span>
                       </label>
                       <button
                         type="button"
                         onClick={() => setActiveTab('datasets')}
                         className="text-[11px] font-mono text-purple-400 hover:text-purple-300 flex items-center gap-1 transition-colors cursor-pointer"
                       >
-                        <span>Open Dataset Hub →</span>
+                        <span>{isRTL ? 'فتح مركز البيانات ←' : 'Open Dataset Hub →'}</span>
                       </button>
                     </div>
 
@@ -1922,7 +1922,7 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
                       className="px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:opacity-40 text-white font-bold font-mono transition-all flex items-center gap-2 shadow-md cursor-pointer"
                     >
                       {runningAction === 'training_lora' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
-                      <span>Launch Unsloth QLoRA Training</span>
+                      <span>{isRTL ? 'إطلاق تدريب Unsloth QLoRA' : 'Launch Unsloth QLoRA Training'}</span>
                     </button>
                     <button
                       onClick={handlePostEval}
@@ -1930,7 +1930,7 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
                       className="px-5 py-2 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-bold font-mono transition-all flex items-center gap-2 shadow-md disabled:opacity-50"
                     >
                       {runningAction === 'post_eval' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <TrendingUp className="w-3.5 h-3.5" />}
-                      <span>Run Post-Eval Scorecard</span>
+                      <span>{isRTL ? 'عرض بطاقة نتائج التقييم' : 'Run Post-Eval Scorecard'}</span>
                     </button>
                   </div>
 
@@ -2115,7 +2115,7 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
                   <div className="flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-purple-400" />
                     <h3 className="font-bold text-sm text-gray-100 font-mono uppercase tracking-wider">
-                      Ask AI to Generate Custom Dataset
+                      {isRTL ? 'توليد مجموعة بيانات اصطناعية عبر الذكاء الاصطناعي' : 'Ask AI to Generate Custom Dataset'}
                     </h3>
                   </div>
                   
@@ -2133,14 +2133,14 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
                       className="px-3.5 py-1.5 rounded-xl bg-[#151928] hover:bg-[#1f243a] border border-card-border text-gray-300 text-xs font-mono font-semibold transition-all flex items-center gap-1.5"
                     >
                       <Upload className="w-3.5 h-3.5 text-indigo-400" />
-                      <span>Upload JSONL / JSON</span>
+                      <span>{isRTL ? 'رفع ملف JSONL / JSON' : 'Upload JSONL / JSON'}</span>
                     </button>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
                   <div className="md:col-span-2 space-y-1">
-                    <label className="text-[10px] uppercase font-mono text-gray-400">Dataset Topic & Focus</label>
+                    <label className="text-[10px] uppercase font-mono text-gray-400">{isRTL ? 'موضوع ومجال مجموعة البيانات' : 'Dataset Topic & Focus'}</label>
                     <input
                       type="text"
                       value={hubSynthTopic}
@@ -2151,7 +2151,7 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-mono text-gray-400">Dataset Name (Optional)</label>
+                    <label className="text-[10px] uppercase font-mono text-gray-400">{isRTL ? 'اسم مجموعة البيانات (اختياري)' : 'Dataset Name (Optional)'}</label>
                     <input
                       type="text"
                       value={hubSynthName}
@@ -2162,7 +2162,7 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-mono text-gray-400">Sample Count</label>
+                    <label className="text-[10px] uppercase font-mono text-gray-400">{isRTL ? 'عدد العينات' : 'Sample Count'}</label>
                     <select
                       value={hubSynthCount}
                       onChange={(e) => setHubSynthCount(Number(e.target.value))}
@@ -2183,7 +2183,7 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
                     className="px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold font-mono text-xs transition-all flex items-center gap-2 shadow-md disabled:opacity-50"
                   >
                     {isSynthesizingInHub ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-                    <span>{isSynthesizingInHub ? 'Synthesizing Pairs...' : 'Generate & Add to Hub'}</span>
+                    <span>{isSynthesizingInHub ? (isRTL ? 'جاري توليد الأزواج...' : 'Synthesizing Pairs...') : (isRTL ? 'توليد وإضافة إلى المركز' : 'Generate & Add to Hub')}</span>
                   </button>
                 </div>
               </div>
@@ -2194,7 +2194,7 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
                 {/* Left: Datasets List */}
                 <div className="p-4 rounded-2xl bg-[#0f121e] border border-card-border space-y-3 flex flex-col h-[520px]">
                   <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 font-mono flex items-center justify-between pb-2 border-b border-card-border">
-                    <span>Saved Datasets</span>
+                    <span>{isRTL ? 'مجموعات البيانات المحفوظة' : 'Saved Datasets'}</span>
                     <span className="text-purple-400 font-bold">({datasets.length})</span>
                   </div>
 
@@ -2278,7 +2278,7 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
                                 className="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-mono font-bold flex items-center gap-1"
                               >
                                 <Save className="w-3 h-3" />
-                                <span>Save Changes</span>
+                                <span>{isRTL ? 'حفظ التعديلات' : 'Save Changes'}</span>
                               </button>
                             </>
                           ) : (
@@ -2287,7 +2287,7 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
                               className="px-3 py-1 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/40 text-indigo-300 text-xs font-mono font-semibold flex items-center gap-1"
                             >
                               <Edit3 className="w-3 h-3" />
-                              <span>Edit Samples</span>
+                              <span>{isRTL ? 'تعديل العينات' : 'Edit Samples'}</span>
                             </button>
                           )}
                         </div>
@@ -2305,7 +2305,7 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
                                   className="text-red-400 hover:text-red-300 text-[10px] font-mono flex items-center gap-1"
                                 >
                                   <Trash2 className="w-3 h-3" />
-                                  <span>Remove Pair</span>
+                                  <span>{isRTL ? 'حذف الزوج' : 'Remove Pair'}</span>
                                 </button>
                               )}
                             </div>
@@ -2365,10 +2365,10 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
                   <div className="flex items-center gap-2">
                     <Swords className="w-4 h-4 text-purple-400" />
                     <h3 className="font-bold text-sm text-gray-100 font-mono uppercase tracking-wider">
-                      Side-by-Side Benchmark Arena
+                      {isRTL ? 'ساحة المقارنة المباشرة جنباً إلى جنب' : 'Side-by-Side Benchmark Arena'}
                     </h3>
                   </div>
-                  <span className="text-xs text-gray-400 font-mono">Compare Base vs Fine-Tuned outputs live</span>
+                  <span className="text-xs text-gray-400 font-mono">{isRTL ? 'مقارنة مخرجات النموذج الأساسي والمدرب مباشرة' : 'Compare Base vs Fine-Tuned outputs live'}</span>
                 </div>
 
                 <div className="space-y-2">
@@ -2418,7 +2418,7 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
                       className="px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white text-xs font-bold font-mono transition-all flex items-center gap-2 shadow-md"
                     >
                       {isArenaStreaming ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-                      <span>{isArenaStreaming ? 'Benchmarking Both...' : 'Run Dual Benchmark'}</span>
+                      <span>{isArenaStreaming ? (isRTL ? 'جاري اختبار النموذجين...' : 'Benchmarking Both...') : (isRTL ? 'تشغيل الاختبار المزدوج' : 'Run Dual Benchmark')}</span>
                     </button>
                   </div>
                 </div>
@@ -2429,7 +2429,7 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
                 <div className="p-4 rounded-2xl bg-[#0f121e] border border-card-border space-y-2 flex flex-col h-[400px]">
                   <div className="flex items-center justify-between pb-2 border-b border-card-border">
                     <span className="font-bold text-xs text-gray-300 font-mono">Base: {arenaBaseModel}</span>
-                    <span className="text-[10px] text-gray-500 font-mono">Baseline</span>
+                    <span className="text-[10px] text-gray-500 font-mono">{isRTL ? 'الأساس' : 'Baseline'}</span>
                   </div>
                   <div className="flex-1 overflow-y-auto p-2 font-mono text-xs text-gray-300 whitespace-pre-wrap leading-relaxed">
                     {arenaBaseOutput || <span className="text-gray-600 italic">Awaiting response...</span>}
@@ -2441,7 +2441,7 @@ export default function FineTuningStudio({ models, agents = [], activeModel }) {
                     <span className="font-bold text-xs text-purple-300 font-mono">
                       Fine-Tuned: {arenaFinetunedModel || currentJob?.target_identifier}
                     </span>
-                    <span className="text-[10px] text-purple-400 font-mono font-bold">Specialized</span>
+                    <span className="text-[10px] text-purple-400 font-mono font-bold">{isRTL ? 'المخصص' : 'Specialized'}</span>
                   </div>
                   <div className="flex-1 overflow-y-auto p-2 font-mono text-xs text-gray-200 whitespace-pre-wrap leading-relaxed">
                     {arenaFinetunedOutput || <span className="text-gray-600 italic">Awaiting response...</span>}
