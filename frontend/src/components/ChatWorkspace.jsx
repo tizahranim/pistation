@@ -52,6 +52,20 @@ export default function ChatWorkspace({
   onClearQueuedPrompt
 }) {
   const { t, isRTL } = useLanguage();
+
+  const getLocalizedRole = (role) => {
+    if (!isRTL) return role || 'Autonomous coding and research specialist';
+    if (!role) return 'مساعد الذكاء الاصطناعي المتخصص في البرمجة والبحث';
+    const map = {
+      'Generalist Problem Solver & Code Orchestrator': 'المساعد العام المتقدم وحلال المشكلات والأكواد',
+      'System Architect & Cloud Infrastructure': 'مهندس النظم والبنية التحتية السحابية',
+      'Security Auditor & Vulnerability Hunter': 'مدقق الأمان واكتشاف الثغرات البرمجية',
+      'Doc Analyst & Research Synthesis': 'محلل المستندات واستخلاص البحوث',
+      'General Purpose Agent': 'وكيل متعدد الاستخدامات'
+    };
+    return map[role] || role;
+  };
+
   const [messages, setMessages] = useState([]);
   const [inputPrompt, setInputPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
