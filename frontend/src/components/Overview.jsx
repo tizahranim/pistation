@@ -390,7 +390,7 @@ export default function Overview({
     },
     {
       id: 'docs',
-      title: 'Library & Docs',
+      title: 'Library',
       icon: BookOpen,
       desc: 'RAG indexed knowledge base',
       badge: `${documents.length} files`,

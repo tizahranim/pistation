@@ -55,7 +55,7 @@ export default function Sidebar({
     { id: 'studio', label: 'Agent Studio', icon: Users, badge: agents.length },
     { id: 'debate', label: 'Agent Debate', icon: Swords, badge: null },
     { id: 'skills', label: 'Skills & Tools', icon: Puzzle, badge: null },
-    { id: 'docs', label: 'Library & Docs', icon: BookOpen, badge: documentCount || null },
+    { id: 'docs', label: 'Library', icon: BookOpen, badge: documentCount || null },
     { id: 'memory', label: 'Memory & Facts', icon: BrainCircuit, badge: null },
     { id: 'resources', label: 'System Resources', icon: Activity, badge: null },
   ];
