@@ -548,27 +548,28 @@ INSTRUCTIONS:
                 "is_leader": is_leader,
                 "stance": {"type": stance["type"], "target": stance["target"], "reason": stance["reason"]}
             }
-            transcript.append(agent_turn_record)
-
-            await db.execute("""
-            UPDATE discussions SET transcript = ? WHERE id = ?;
-            """, (json.dumps(transcript), discussion_id))
-            await db.commit()
-
-            yield {"type": "stance", "agent_id": agent["id"], "stance": agent_turn_record["stance"]}
-            yield {"type": "agent_turn_end", "agent_id": agent["id"], "full_content": stance["clean"]}
-
-            # If the leader responded or if the debate was already completed, update the executive summary
-            updated_summary = stance["clean"]
-            if is_leader or disc.get("summary"):
+            is_summary_revision = (is_leader and bool(disc.get("summary")))
+            if is_summary_revision:
+                updated_summary = stance["clean"]
                 await db.execute("""
-                UPDATE discussions SET summary = ?, status = 'completed' WHERE id = ?;
-                """, (updated_summary, discussion_id))
+                UPDATE discussions SET summary = ?, transcript = ?, status = 'completed' WHERE id = ?;
+                """, (updated_summary, json.dumps(transcript), discussion_id))
                 await db.commit()
+
+                yield {"type": "stance", "agent_id": agent["id"], "stance": agent_turn_record["stance"]}
+                yield {"type": "agent_turn_end", "agent_id": agent["id"], "full_content": stance["clean"], "is_summary_update": True}
                 score, disagreements = compute_consensus(transcript)
                 yield {"type": "consensus_update", "score": score}
                 yield {"type": "complete", "discussion_id": discussion_id, "summary": updated_summary, "transcript": transcript}
             else:
+                transcript.append(agent_turn_record)
+                await db.execute("""
+                UPDATE discussions SET transcript = ? WHERE id = ?;
+                """, (json.dumps(transcript), discussion_id))
+                await db.commit()
+
+                yield {"type": "stance", "agent_id": agent["id"], "stance": agent_turn_record["stance"]}
+                yield {"type": "agent_turn_end", "agent_id": agent["id"], "full_content": stance["clean"], "is_summary_update": False}
                 yield {"type": "complete", "discussion_id": discussion_id, "transcript": transcript}
 
         finally:

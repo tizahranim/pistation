@@ -885,22 +885,33 @@ export default function AgentDebate({
                   role: event.role || event.agent?.role || 'Debater',
                   content: ''
                 };
-                setCurrentTurn(replyObj);
+                const isTargetingLeaderSummary = (aid === leaderId || targetInterventionAgentId === 'leader' || !leaderId) && Boolean(finalSynthesis);
+                if (!isTargetingLeaderSummary) {
+                  setCurrentTurn(replyObj);
+                }
               } else if (event.type === 'agent_token' && replyObj) {
                 replyObj.content += event.content;
-                setCurrentTurn({ ...replyObj });
-              } else if (event.type === 'agent_turn_end' && replyObj) {
-                if (event.full_content) {
-                  replyObj.content = event.full_content;
+                const isTargetingLeaderSummary = (replyObj.agent_id === leaderId || targetInterventionAgentId === 'leader' || !leaderId) && Boolean(finalSynthesis);
+                if (isTargetingLeaderSummary) {
+                  setFinalSynthesis(replyObj.content);
+                } else {
+                  setCurrentTurn({ ...replyObj });
                 }
-                const fin = { ...replyObj };
-                setStreamTurns(prev => [...prev, fin]);
-                queueVoicePlayback(fin.content, voiceMap[fin.agent_id] || 'en-US-JennyNeural', fin.id, fin.agent_id);
+              } else if (event.type === 'agent_turn_end' && replyObj) {
+                const finContent = event.full_content || replyObj.content;
+                const isTargetingLeaderSummary = event.is_summary_update || ((replyObj.agent_id === leaderId || targetInterventionAgentId === 'leader' || !leaderId) && Boolean(finalSynthesis));
 
-                // If this is the leader or target is leader, automatically update Executive Summary with the revised output
-                const isLeaderTurn = fin.agent_id === leaderId || targetInterventionAgentId === 'leader' || !leaderId;
-                if (isLeaderTurn && fin.content) {
-                  setFinalSynthesis(fin.content);
+                if (isTargetingLeaderSummary) {
+                  // Directly update ONLY the Executive Summary card
+                  setFinalSynthesis(finContent);
+                } else {
+                  // Add as standard debater turn in stream
+                  const fin = { ...replyObj, content: finContent };
+                  setStreamTurns(prev => [...prev, fin]);
+                }
+
+                if (finContent) {
+                  queueVoicePlayback(finContent, voiceMap[replyObj.agent_id] || 'en-US-JennyNeural', replyObj.id, replyObj.agent_id);
                 }
 
                 setCurrentTurn(null);
