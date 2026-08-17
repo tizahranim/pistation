@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useLanguage } from '../context/LanguageContext.jsx';
 import { 
   Send, 
   Sparkles, 
