@@ -2,6 +2,19 @@
 
 A self-hosted Agent Operating System and dashboard: a FastAPI backend with a React frontend that gives local AI agents (Ollama + OpenRouter) control over your machine's files, projects, storage, documents, memory, and hardware.
 
+## Features
+
+- **Chat Workspace** — multi-agent chat with streaming responses, thinking/reasoning display, and session history
+- **Overview Dashboard** — live system telemetry (CPU, RAM, GPU, storage, OS info), weather, to-do list, and station shortcuts
+- **Project Studio** — file tree explorer, code editor, terminal, and in-editor agent copilot
+- **Fine-Tuning Studio** — dataset generation and LoRA fine-tuning via Unsloth for local Ollama models
+- **Agent Studio & Debates** — create custom agents, orchestrate multi-agent discussions
+- **Memory Control** — persistent facts, rule files (`AGENTS.md`), and session memory
+- **Documents Inventory** — ingest, search, and chat over local documents
+- **Skills & MCP Hub** — manage agent skills and MCP servers (filesystem, web fetch, SQLite, GitHub)
+- **Resource Monitor & Drive Explorer** — hardware stats, drive mounts, and file browser
+- **Telemetry & Voice** — streaming hardware copilot and voice interface
+
 ## Screenshots
 
 **Overview** — live system telemetry, weather, station shortcuts, and the quick-prompt bar.
@@ -43,19 +56,6 @@ A self-hosted Agent Operating System and dashboard: a FastAPI backend with a Rea
 **System Resources** — real-time CPU, RAM, GPU, and disk monitoring with a drive explorer.
 
 ![System Resources](docs/screenshots/system-resources.png)
-
-## Features
-
-- **Chat Workspace** — multi-agent chat with streaming responses, thinking/reasoning display, and session history
-- **Overview Dashboard** — live system telemetry (CPU, RAM, GPU, storage, OS info), weather, to-do list, and station shortcuts
-- **Project Studio** — file tree explorer, code editor, terminal, and in-editor agent copilot
-- **Fine-Tuning Studio** — dataset generation and LoRA fine-tuning via Unsloth for local Ollama models
-- **Agent Studio & Debates** — create custom agents, orchestrate multi-agent discussions
-- **Memory Control** — persistent facts, rule files (`AGENTS.md`), and session memory
-- **Documents Inventory** — ingest, search, and chat over local documents
-- **Skills & MCP Hub** — manage agent skills and MCP servers (filesystem, web fetch, SQLite, GitHub)
-- **Resource Monitor & Drive Explorer** — hardware stats, drive mounts, and file browser
-- **Telemetry & Voice** — streaming hardware copilot and voice interface
 
 ## Architecture
 
