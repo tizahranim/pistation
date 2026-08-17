@@ -21,6 +21,7 @@ class SingleChatRequest(BaseModel):
     model_id: Optional[str] = None
     model_provider: Optional[str] = None
     document_ids: Optional[List[str]] = []
+    language: Optional[str] = 'en'
 
 @router.post("/reset-stuck-agents")
 async def reset_stuck_agents():
@@ -277,6 +278,7 @@ class DiscussionRequest(BaseModel):
     topic: str
     agent_ids: List[str]
     document_ids: Optional[List[str]] = []
+    language: Optional[str] = 'en'
     leader_id: Optional[str] = None
     roles_map: Optional[Dict[str, str]] = {}
     human_guidance: Optional[str] = None
@@ -314,7 +316,8 @@ async def discussion_stream(req: DiscussionRequest):
             leader_id=req.leader_id,
             roles_map=req.roles_map or {},
             human_guidance=req.human_guidance,
-            rounds=req.rounds
+            rounds=req.rounds,
+            language=req.language or 'en'
         )
         await hub.start_task(discussion_id, generator_coroutine)
 
@@ -382,6 +385,7 @@ class DiscussionParticipateRequest(BaseModel):
     message: str
     target_agent_id: Optional[str] = None
     document_ids: Optional[List[str]] = []
+    language: Optional[str] = 'en'
 
 class DiscussionChallengeRequest(BaseModel):
     message: str
@@ -395,7 +399,8 @@ async def participate_discussion_stream(discussion_id: str, req: DiscussionParti
             discussion_id=discussion_id,
             human_message=req.message,
             target_agent_id=req.target_agent_id,
-            document_ids=req.document_ids or []
+            document_ids=req.document_ids or [],
+            language=req.language or 'en'
         ):
             yield f"data: {json.dumps(event)}\n\n"
 

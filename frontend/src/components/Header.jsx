@@ -13,8 +13,10 @@ import {
   Globe,
   Bot,
   Users,
-  Check
+  Check,
+  Languages
 } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext.jsx';
 
 export default function Header({ 
   activeTab, 
@@ -29,6 +31,7 @@ export default function Header({
   telemetry,
   onOpenCommandPalette 
 }) {
+  const { language, toggleLanguage, t } = useLanguage();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -548,14 +551,23 @@ export default function Header({
         )}
       </div>
 
-      {/* Right Controls: New Chat */}
-      <div className="flex items-center gap-2.5">
+      {/* Right Controls: Language Switcher & New Chat */}
+      <div className="flex items-center gap-2">
+        <button
+          onClick={toggleLanguage}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#181b26] hover:bg-[#222738] border border-card-border text-xs text-emerald-400 font-bold transition-all shadow-sm cursor-pointer"
+          title={language === 'en' ? 'التحويل إلى اللغة العربية' : 'Switch to English'}
+        >
+          <Languages className="w-3.5 h-3.5 text-emerald-400" />
+          <span>{language === 'en' ? 'عربي' : 'EN'}</span>
+        </button>
+
         <button
           onClick={onNewSession}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-medium text-xs shadow-sm shadow-emerald-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
         >
           <Plus className="w-3.5 h-3.5" />
-          <span>New Chat</span>
+          <span>{t('chat.new_chat', 'New Chat')}</span>
         </button>
       </div>
     </header>

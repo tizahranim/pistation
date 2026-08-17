@@ -21,6 +21,7 @@ import {
   Target
 } from 'lucide-react';
 import { sessionStreamManager } from '../services/sessionStreamManager';
+import { useLanguage } from '../context/LanguageContext.jsx';
 
 export default function Sidebar({ 
   activeTab, 
@@ -37,6 +38,7 @@ export default function Sidebar({
   onDeleteSession,
   onNewSession
 }) {
+  const { t } = useLanguage();
   const [sessionSearch, setSessionSearch] = useState('');
   const [, setStreamTick] = useState(0);
 
@@ -48,16 +50,16 @@ export default function Sidebar({
   }, []);
 
   const tabs = [
-    { id: 'overview', label: 'Overview', icon: LayoutDashboard, badge: null },
-    { id: 'chat', label: 'Chat Workspace', icon: MessageSquare, badge: null },
-    { id: 'projects', label: 'Projects & Code', icon: FolderGit2, badge: null },
-    { id: 'finetuning', label: 'Fine-Tuning Studio', icon: Target, badge: null },
-    { id: 'studio', label: 'Agent Studio', icon: Users, badge: agents.length },
-    { id: 'debate', label: 'Agent Debate', icon: Swords, badge: null },
-    { id: 'skills', label: 'Skills & Tools', icon: Puzzle, badge: null },
-    { id: 'docs', label: 'Library', icon: BookOpen, badge: documentCount || null },
-    { id: 'memory', label: 'Memory & Facts', icon: BrainCircuit, badge: null },
-    { id: 'resources', label: 'System Resources', icon: Activity, badge: null },
+    { id: 'overview', label: t('nav.overview', 'Overview'), icon: LayoutDashboard, badge: null },
+    { id: 'chat', label: t('nav.chat', 'Chat Workspace'), icon: MessageSquare, badge: null },
+    { id: 'projects', label: t('nav.projects', 'Projects & Code'), icon: FolderGit2, badge: null },
+    { id: 'finetuning', label: t('nav.finetuning', 'Fine-Tuning Studio'), icon: Target, badge: null },
+    { id: 'studio', label: t('nav.agents', 'Agent Studio'), icon: Users, badge: agents.length },
+    { id: 'debate', label: t('nav.debate', 'Agent Debate'), icon: Swords, badge: null },
+    { id: 'skills', label: t('nav.skills', 'Skills & Tools'), icon: Puzzle, badge: null },
+    { id: 'docs', label: t('nav.library', 'Library'), icon: BookOpen, badge: documentCount || null },
+    { id: 'memory', label: t('nav.memory', 'Memory & Facts'), icon: BrainCircuit, badge: null },
+    { id: 'resources', label: t('nav.resources', 'System Resources'), icon: Activity, badge: null },
   ];
 
   const activeAgent = agents.find(a => a.id === activeAgentId) || agents[0];
@@ -74,7 +76,7 @@ export default function Sidebar({
         {/* Navigation Tabs */}
         <div>
           <div className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-gray-500 font-mono">
-            Navigation
+            {t('nav.navigation', 'Navigation')}
           </div>
           <nav className="space-y-0.5">
             {tabs.map((tab) => {
@@ -112,7 +114,7 @@ export default function Sidebar({
           <div className="flex items-center justify-between px-3 pb-1.5">
             <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 font-mono flex items-center gap-1">
               <History className="w-3 h-3 text-gray-400" />
-              Chat History
+              {t('chat.sessions', 'Chat History')}
             </span>
             <button
               onClick={onNewSession}
@@ -120,7 +122,7 @@ export default function Sidebar({
               title="Start New Chat"
             >
               <Plus className="w-3 h-3" />
-              <span>New Chat</span>
+              <span>{t('chat.new_chat', 'New Chat')}</span>
             </button>
           </div>
 
@@ -182,7 +184,7 @@ export default function Sidebar({
         <div className="pt-2 border-t border-card-border/60 shrink-0">
           <div className="flex items-center justify-between px-3 pb-1.5">
             <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 font-mono">
-              Active Agent ({agents.length})
+              {t('nav.active_agents', 'Active Agent')} ({agents.length})
             </span>
             {isAgentNativeModel ? (
               <span className="text-[10px] text-emerald-400 font-mono flex items-center gap-1">

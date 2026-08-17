@@ -140,7 +140,8 @@ class MultiAgentOrchestrator:
         leader_id: Optional[str] = None,
         roles_map: Dict[str, str] = {},
         human_guidance: Optional[str] = None,
-        rounds: int = 2
+        rounds: int = 2,
+        language: str = 'en'
     ) -> AsyncGenerator[Dict[str, Any], None]:
         db = await get_db()
         try:
@@ -496,7 +497,8 @@ Keep the entire synthesis tight and executive-grade."""
         discussion_id: str,
         human_message: str,
         target_agent_id: Optional[str] = None,
-        document_ids: List[str] = []
+        document_ids: List[str] = [],
+        language: str = 'en'
     ) -> AsyncGenerator[Dict[str, Any], None]:
         db = await get_db()
         try:

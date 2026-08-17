@@ -96,7 +96,8 @@ class SessionStreamManager {
           model_id: model?.model,
           model_provider: model?.provider,
           message: prompt,
-          document_ids: documentIds
+          document_ids: documentIds,
+          language: localStorage.getItem('pistation_language') || 'en'
         })
       });
 

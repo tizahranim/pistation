@@ -33,6 +33,7 @@ import {
   MemoryStick
 } from 'lucide-react';
 import DriveExplorerModal from './DriveExplorerModal';
+import { useLanguage } from '../context/LanguageContext.jsx';
 
 export default function Overview({
   setActiveTab,
@@ -47,6 +48,7 @@ export default function Overview({
   onNewSession,
   onDispatchPrompt
 }) {
+  const { t } = useLanguage();
   // 1. Live Time State
   const [currentTime, setCurrentTime] = useState(new Date());
   

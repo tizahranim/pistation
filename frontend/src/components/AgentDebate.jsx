@@ -294,11 +294,12 @@ export default function AgentDebate({
         });
         return next;
       });
+      const activeVoiceList = language === 'ar' ? ARABIC_CURATED_VOICES : CURATED_VOICES;
       setVoiceMap(prev => {
         const next = { ...prev };
         selectedAgentIds.forEach((id, idx) => {
-          if (!next[id]) {
-            next[id] = CURATED_VOICES[idx % CURATED_VOICES.length].id;
+          if (!next[id] || (language === 'ar' && !next[id].startsWith('ar-')) || (language === 'en' && next[id].startsWith('ar-'))) {
+            next[id] = activeVoiceList[idx % activeVoiceList.length].id;
           }
         });
         return next;
@@ -315,7 +316,7 @@ export default function AgentDebate({
       const recognition = new SpeechRecognition();
       recognition.continuous = true;
       recognition.interimResults = true;
-      recognition.lang = 'en-US';
+      recognition.lang = language === 'ar' ? 'ar-SA' : 'en-US';
 
       recognition.onresult = (event) => {
         let transcript = '';
@@ -822,7 +823,8 @@ export default function AgentDebate({
           leader_id: leaderId,
           roles_map: rolesMap,
           human_guidance: humanGuidance.trim() || undefined,
-          rounds: parseInt(rounds, 10) || 2
+          rounds: parseInt(rounds, 10) || 2,
+          language: language || 'en'
         }),
         signal: abortControllerRef.current.signal
       });
@@ -1213,7 +1215,7 @@ export default function AgentDebate({
           {/* Past Discussions */}
           <div className="space-y-2 pt-2 border-t border-card-border/60">
             <span className="text-[10px] font-bold font-mono uppercase text-gray-400 px-1 flex items-center justify-between">
-              <span>Debate History</span>
+              <span>{t('debate.history_title', 'Debate History')}</span>
               <span className="text-gray-500">{discussions.length}</span>
             </span>
 
@@ -1333,7 +1335,7 @@ export default function AgentDebate({
                 }`}
               >
                 <Play className="w-4 h-4 fill-white" />
-                <span>Enter Debate Chamber</span>
+                <span>{t('debate.enter_chamber_btn', 'Enter Debate Chamber')}</span>
               </button>
             </div>
 
@@ -1657,7 +1659,7 @@ export default function AgentDebate({
                     className="px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 text-xs font-mono font-bold flex items-center gap-1.5 cursor-pointer"
                   >
                     <Square className="w-3 h-3 fill-rose-400" />
-                    <span>Stop Debate</span>
+                    <span>{t('debate.stop_debate_btn', 'Stop Debate')}</span>
                   </button>
                 ) : (
                   <div className="flex items-center gap-1.5">
@@ -1823,9 +1825,9 @@ export default function AgentDebate({
                       </div>
                       <div>
                         <h3 className="font-bold text-sm text-white font-mono flex items-center gap-2">
-                          <span>Executive Summary</span>
+                          <span>{t('debate.executive_summary', 'Executive Summary')}</span>
                           <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono border border-emerald-500/30">
-                            Consensus: {consensusScore}%
+                            {t('debate.consensus', 'Consensus')}: {consensusScore}%
                           </span>
                         </h3>
                         <p className="text-[11px] text-gray-400">
@@ -1844,7 +1846,7 @@ export default function AgentDebate({
                         }`}
                       >
                         {memorySavedFeedback ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Bookmark className="w-3.5 h-3.5" />}
-                        <span>{memorySavedFeedback ? 'Saved to Memory!' : 'Save to Memory Facts'}</span>
+                        <span>{memorySavedFeedback ? t('debate.saved_memory', 'Saved to Memory!') : t('debate.save_memory', 'Save to Memory Facts')}</span>
                       </button>
 
                       <button
