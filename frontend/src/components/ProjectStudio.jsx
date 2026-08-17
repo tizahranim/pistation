@@ -75,7 +75,7 @@ export default function ProjectStudio({ agents = [], activeModel }) {
     {
       id: 'init',
       role: 'assistant',
-      content: 'Hello Tariq! I am your AI assistant in Project Studio. Click any folder or file to focus my awareness, ask questions about your workspace, or tell me to write code!'
+      content: 'Hello! I am your AI assistant in Project Studio. Click any folder or file to focus my awareness, ask questions about your workspace, or tell me to write code!'
     }
   ]);
   const [inputPrompt, setInputPrompt] = useState('');
@@ -204,7 +204,7 @@ export default function ProjectStudio({ agents = [], activeModel }) {
             {
               id: 'init',
               role: 'assistant',
-              content: 'Hello Tariq! I am your AI assistant in Project Studio. Click any folder or file to focus my awareness, ask questions about your workspace, or tell me to write code!'
+              content: 'Hello! I am your AI assistant in Project Studio. Click any folder or file to focus my awareness, ask questions about your workspace, or tell me to write code!'
             }
           ]);
         }
@@ -1016,7 +1016,7 @@ export default function ProjectStudio({ agents = [], activeModel }) {
                   <div key={log.id} className="space-y-1">
                     {/* Shell Prompt Header */}
                     <div className="flex items-center gap-1.5 flex-wrap text-[11px]">
-                      <span className="text-emerald-400 font-bold">tariq@pi-agent</span>
+                      <span className="text-emerald-400 font-bold">user@pi-agent</span>
                       <span className="text-gray-400">:</span>
                       <span className="text-blue-400 font-bold">{log.pathDisplay || '~'}</span>
                       <span className="text-emerald-400 font-bold">$</span>
@@ -1059,7 +1059,7 @@ export default function ProjectStudio({ agents = [], activeModel }) {
                   }}
                   className="flex items-center gap-1.5 pt-1 text-[11px]"
                 >
-                  <span className="text-emerald-400 font-bold shrink-0">tariq@pi-agent</span>
+                  <span className="text-emerald-400 font-bold shrink-0">user@pi-agent</span>
                   <span className="text-gray-400 shrink-0">:</span>
                   <span className="text-blue-400 font-bold shrink-0">
                     {activeProject ? (activeProject.path.replace(homeDir, '~') + (focusedFolder ? `/${focusedFolder}` : '')) : '~'}

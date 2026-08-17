@@ -40,7 +40,7 @@ async def list_memory_facts():
         # If table is empty, initialize default memory
         if not rows:
             default_memories = [
-                ("mem-user-name", "user_profile", "User Name", "Tariq", "system", 1),
+                ("mem-user-name", "user_profile", "User Name", "Alex", "system", 1),
                 ("mem-pref-style", "preference", "Coding Style", "Clean, concise, modular, and production-ready", "system", 1),
                 ("mem-proj-stack", "project_rule", "Tech Stack", "FastAPI (Python) backend + React (Vite/Tailwind) frontend + Dual RTX 5070s", "system", 1)
             ]

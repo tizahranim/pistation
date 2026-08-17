@@ -1126,7 +1126,7 @@ export default function MemoryControl() {
                   rows={4}
                   value={factValue}
                   onChange={(e) => setFactValue(e.target.value)}
-                  placeholder="e.g. Tariq (Senior Engineer, prefers concise responses, TypeScript on frontend, FastAPI backend)"
+                  placeholder="e.g. Alex (Senior Engineer, prefers concise responses, TypeScript on frontend, FastAPI backend)"
                   className="w-full bg-[#141829] border border-card-border rounded-xl p-3 text-xs text-white focus:outline-none focus:border-emerald-500 resize-none font-sans leading-relaxed"
                 />
               </div>
@@ -1190,7 +1190,7 @@ export default function MemoryControl() {
                 placeholder='[
   {
     "key": "User Name",
-    "value": "Tariq",
+    "value": "Alex",
     "category": "user_profile",
     "is_pinned": 1
   }
