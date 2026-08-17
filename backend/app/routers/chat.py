@@ -272,7 +272,8 @@ async def chat_single_stream(req: SingleChatRequest):
     return StreamingResponse(sse_generator(), media_type="text/event-stream")
 
 class DiscussionRequest(BaseModel):
-    title: str
+    discussion_id: Optional[str] = None
+    title: Optional[str] = None
     topic: str
     agent_ids: List[str]
     document_ids: Optional[List[str]] = []
@@ -281,18 +282,19 @@ class DiscussionRequest(BaseModel):
     human_guidance: Optional[str] = None
     rounds: int = 2
 
+@router.post("/discussions/stream")
 @router.post("/discussion/stream")
 async def discussion_stream(req: DiscussionRequest):
     db = await get_db()
-    discussion_id = f"disc-{uuid.uuid4().hex[:8]}"
+    discussion_id = req.discussion_id or f"disc-{uuid.uuid4().hex[:8]}"
     await db.execute("""
-    INSERT INTO discussions (id, title, topic, document_ids, agent_ids, leader_id, roles_map, human_guidance, rounds, created_at)
+    INSERT OR REPLACE INTO discussions (id, title, topic, document_ids, agent_ids, leader_id, roles_map, human_guidance, rounds, created_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP);
     """, (
         discussion_id, 
         req.title or f"Debate: {req.topic[:35]}...", 
         req.topic, 
-        json.dumps(req.document_ids), 
+        json.dumps(req.document_ids or []), 
         json.dumps(req.agent_ids),
         req.leader_id,
         json.dumps(req.roles_map or {}),
