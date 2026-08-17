@@ -101,6 +101,15 @@ Open http://localhost:8000
 
 The server binds `0.0.0.0:8000`. Runtime data is written to `data/` relative to the repo, and the database path can be overridden with the `PI_DB_PATH` env var (used by tests).
 
+## Environment variables
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `OLLAMA_BASE_URL` | `http://127.0.0.1:11434` | Ollama server endpoint |
+| `OPENROUTER_API_KEY` | — | OpenRouter API key (takes priority over the auth file) |
+| `AGENT_DATA_DIR` | `~/.pi/agent` | Shared agent data folder (sessions, skills, model registry, API keys). Point this anywhere — e.g. `~/.hermes` — to integrate with any other agent, or keep the default to share state with Pi. |
+| `PI_DB_PATH` | `data/control_center.db` | SQLite database location (used by tests) |
+
 ## Tests
 
 ```bash
@@ -110,5 +119,5 @@ cd backend
 
 ## Notes
 
-- The OpenRouter API key is read at runtime from `~/.pi/agent/auth.json` — it is never stored in the repo.
-- File paths (home directory, workspace base, SQLite DB) are resolved automatically from your system — no per-machine configuration needed.
+- The OpenRouter API key is read at runtime from the `OPENROUTER_API_KEY` env var, or from `auth.json` inside your agent data dir — it is never stored in the repo.
+- File paths (home directory, workspace base, SQLite DB, agent data dir) are resolved automatically from your system — no per-machine configuration needed.

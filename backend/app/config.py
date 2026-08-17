@@ -1,14 +1,19 @@
 from pathlib import Path
 import os
-
 HOME_DIR = Path.home()
-PI_AGENT_DIR = HOME_DIR / ".pi" / "agent"
-PI_MODELS_PATH = PI_AGENT_DIR / "models.json"
-PI_SETTINGS_PATH = PI_AGENT_DIR / "settings.json"
-PI_AUTH_PATH = PI_AGENT_DIR / "auth.json"
-PI_SESSIONS_DIR = PI_AGENT_DIR / "sessions"
-PI_SKILLS_DIR = PI_AGENT_DIR / "skills"
-PI_PROMPTS_DIR = PI_AGENT_DIR / "prompts"
+
+# Shared agent data directory (sessions, skills, prompts, model registry, API keys).
+# Defaults to ~/.pi/agent (the Pi agent convention) but can be pointed anywhere
+# (e.g. AGENT_DATA_DIR=~/.hermes) to make PiStation fully agent-neutral.
+AGENT_DATA_DIR = Path(os.getenv("AGENT_DATA_DIR", str(HOME_DIR / ".pi" / "agent"))).expanduser()
+
+PI_AGENT_DIR = AGENT_DATA_DIR
+PI_MODELS_PATH = AGENT_DATA_DIR / "models.json"
+PI_SETTINGS_PATH = AGENT_DATA_DIR / "settings.json"
+PI_AUTH_PATH = AGENT_DATA_DIR / "auth.json"
+PI_SESSIONS_DIR = AGENT_DATA_DIR / "sessions"
+PI_SKILLS_DIR = AGENT_DATA_DIR / "skills"
+PI_PROMPTS_DIR = AGENT_DATA_DIR / "prompts"
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 BASE_DIR = PROJECT_ROOT

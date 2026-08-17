@@ -48,7 +48,7 @@ class LLMRouter:
             api_key = LLMRouter.get_openrouter_api_key()
             if not api_key:
                 yield {
-                    "content": "⚠️ OpenRouter API Key missing. Please check ~/.pi/agent/auth.json",
+                    "content": "⚠️ OpenRouter API Key missing. Set the OPENROUTER_API_KEY env var or add it to the agent data dir (e.g. ~/.pi/agent/auth.json).",
                     "done": True
                 }
                 return

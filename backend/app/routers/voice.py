@@ -27,14 +27,16 @@ class SpeakRequest(BaseModel):
     pitch: Optional[str] = "+0Hz"
 
 def get_openrouter_key():
+    if os.getenv("OPENROUTER_API_KEY"):
+        return os.getenv("OPENROUTER_API_KEY")
     if PI_AUTH_PATH.exists():
         try:
             with open(PI_AUTH_PATH, "r") as f:
                 data = json.load(f)
-                return data.get("openrouter", {}).get("access")
+                return data.get("openrouter", {}).get("access") or data.get("openrouter", {}).get("key")
         except Exception:
             pass
-    return os.getenv("OPENROUTER_API_KEY")
+    return None
 
 @router.get("/voices")
 async def list_available_voices():
