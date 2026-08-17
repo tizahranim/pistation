@@ -162,6 +162,7 @@ export default function AgentDebate({
   // Global Multi-Agent Voiceover State
   const [globalVoiceEnabled, setGlobalVoiceEnabled] = useState(true);
   const [speakingTurnId, setSpeakingTurnId] = useState(null);
+  const [speakingAgentId, setSpeakingAgentId] = useState(null);
   const audioQueueRef = useRef([]);
   const isPlayingAudioRef = useRef(false);
   const currentAudioRef = useRef(null);
@@ -237,20 +238,40 @@ export default function AgentDebate({
 
   const stopAllAudio = () => {
     if (currentAudioRef.current) {
-      currentAudioRef.current.pause();
+      try {
+        currentAudioRef.current.pause();
+        currentAudioRef.current.currentTime = 0;
+        currentAudioRef.current.src = '';
+      } catch (e) {}
       currentAudioRef.current = null;
     }
     audioQueueRef.current = [];
     isPlayingAudioRef.current = false;
     setSpeakingTurnId(null);
-    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    setSpeakingAgentId(null);
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      try {
+        window.speechSynthesis.cancel();
+      } catch (e) {}
+    }
+  };
+
+  const toggleGlobalVoice = () => {
+    setGlobalVoiceEnabled(prev => {
+      const next = !prev;
+      if (!next) {
+        stopAllAudio();
+      }
+      return next;
+    });
   };
 
   // Play natural speech with agent's mapped voice
-  const speakText = async (text, voiceId, turnIdentifier) => {
+  const speakText = async (text, voiceId, turnIdentifier, agentId) => {
     if (!text || !globalVoiceEnabled) return;
     
     setSpeakingTurnId(turnIdentifier);
+    if (agentId) setSpeakingAgentId(agentId);
 
     // Clean text for speech
     const cleanSpeechText = text
@@ -280,16 +301,22 @@ export default function AgentDebate({
         await new Promise((resolve) => {
           audio.onended = () => {
             setSpeakingTurnId(null);
+            setSpeakingAgentId(null);
             currentAudioRef.current = null;
             URL.revokeObjectURL(audioUrl);
             resolve();
           };
           audio.onerror = () => {
             setSpeakingTurnId(null);
+            setSpeakingAgentId(null);
             currentAudioRef.current = null;
             resolve();
           };
-          audio.play().catch(() => resolve());
+          audio.play().catch(() => {
+            setSpeakingTurnId(null);
+            setSpeakingAgentId(null);
+            resolve();
+          });
         });
         return;
       }
@@ -303,16 +330,19 @@ export default function AgentDebate({
         const utt = new SpeechSynthesisUtterance(cleanSpeechText.slice(0, 1000));
         utt.onend = () => {
           setSpeakingTurnId(null);
+          setSpeakingAgentId(null);
           resolve();
         };
         utt.onerror = () => {
           setSpeakingTurnId(null);
+          setSpeakingAgentId(null);
           resolve();
         };
         window.speechSynthesis.speak(utt);
       });
     } else {
       setSpeakingTurnId(null);
+      setSpeakingAgentId(null);
     }
   };
 
@@ -322,16 +352,27 @@ export default function AgentDebate({
     while (audioQueueRef.current.length > 0 && globalVoiceEnabled) {
       const item = audioQueueRef.current.shift();
       if (item) {
-        await speakText(item.text, item.voice, item.turnId);
+        await speakText(item.text, item.voice, item.turnId, item.agentId);
       }
     }
     isPlayingAudioRef.current = false;
   };
 
-  const queueVoicePlayback = (text, voiceId, turnId) => {
+  const queueVoicePlayback = (text, voiceId, turnId, agentId) => {
     if (!globalVoiceEnabled) return;
-    audioQueueRef.current.push({ text, voiceId, turnId });
+    audioQueueRef.current.push({ text, voiceId, turnId, agentId });
     processAudioQueue();
+  };
+
+  const handlePlayTurnVoice = async (turn) => {
+    if (speakingTurnId === turn.id) {
+      stopAllAudio();
+      return;
+    }
+    stopAllAudio();
+    const targetAgentId = turn.agent_id || (turn.is_human ? null : leaderId);
+    const voiceId = voiceMap[targetAgentId] || (turn.is_human ? 'en-US-GuyNeural' : 'en-US-JennyNeural');
+    await speakText(turn.content, voiceId, turn.id, targetAgentId);
   };
 
   const handleApplyTemplate = (tpl) => {
@@ -458,9 +499,9 @@ export default function AgentDebate({
                   const finalizedTurn = { ...activeTurnObject };
                   setStreamTurns(prev => [...prev, finalizedTurn]);
                   
-                  // Queue voiceover playback
+                  // Queue voiceover playback with specific agent voice and agentId
                   const agentVoice = voiceMap[finalizedTurn.agent_id] || 'en-US-JennyNeural';
-                  queueVoicePlayback(finalizedTurn.content, agentVoice, finalizedTurn.id);
+                  queueVoicePlayback(finalizedTurn.content, agentVoice, finalizedTurn.id, finalizedTurn.agent_id);
 
                   activeTurnObject = null;
                   setCurrentTurn(null);
@@ -480,7 +521,7 @@ export default function AgentDebate({
                   setFinalSynthesis(event.summary);
                   // Queue voiceover for synthesis with leader voice
                   const leaderVoice = voiceMap[leaderId] || 'en-US-GuyNeural';
-                  queueVoicePlayback(event.summary, leaderVoice, 'synthesis');
+                  queueVoicePlayback(event.summary, leaderVoice, 'synthesis', leaderId);
                 }
                 if (event.meta?.consensus_score) {
                   setConsensusScore(event.meta.consensus_score);
@@ -624,7 +665,7 @@ export default function AgentDebate({
               } else if (event.type === 'agent_turn_end' && replyObj) {
                 const fin = { ...replyObj };
                 setStreamTurns(prev => [...prev, fin]);
-                queueVoicePlayback(fin.content, voiceMap[fin.agent_id] || 'en-US-JennyNeural', fin.id);
+                queueVoicePlayback(fin.content, voiceMap[fin.agent_id] || 'en-US-JennyNeural', fin.id, fin.agent_id);
                 setCurrentTurn(null);
                 replyObj = null;
               }
@@ -840,10 +881,7 @@ export default function AgentDebate({
             </div>
 
             <button
-              onClick={() => {
-                if (globalVoiceEnabled) stopAllAudio();
-                setGlobalVoiceEnabled(!globalVoiceEnabled);
-              }}
+              onClick={toggleGlobalVoice}
               className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                 globalVoiceEnabled ? 'bg-emerald-500' : 'bg-gray-700'
               }`}
@@ -1163,10 +1201,7 @@ export default function AgentDebate({
 
                 {/* Voiceover Quick Toggle */}
                 <button
-                  onClick={() => {
-                    if (globalVoiceEnabled) stopAllAudio();
-                    setGlobalVoiceEnabled(!globalVoiceEnabled);
-                  }}
+                  onClick={toggleGlobalVoice}
                   className={`px-3 py-1.5 rounded-xl border text-xs font-mono flex items-center gap-1.5 transition-all cursor-pointer ${
                     globalVoiceEnabled
                       ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300'
@@ -1206,7 +1241,9 @@ export default function AgentDebate({
             <div className="px-4 py-3 bg-[#0d101c] border-b border-card-border/60 overflow-x-auto">
               <div className="flex items-center justify-center gap-3 min-w-max mx-auto">
                 {selectedAgentsList.map((agent) => {
-                  const isSpeaking = activeSpeakerId === agent.id;
+                  const isGenerating = activeSpeakerId === agent.id;
+                  const isAudioSpeaking = speakingAgentId === agent.id;
+                  const isSpeaking = isGenerating || isAudioSpeaking;
                   const isLeader = leaderId === agent.id;
                   const role = rolesMap[agent.id] || agent.role;
                   const voice = voiceMap[agent.id];
@@ -1216,7 +1253,7 @@ export default function AgentDebate({
                       key={agent.id}
                       className={`p-3 rounded-2xl border transition-all flex items-center gap-3 relative min-w-[200px] ${
                         isSpeaking
-                          ? 'bg-gradient-to-b from-[#1e233d] to-[#15192c] border-purple-400 shadow-xl shadow-purple-500/20 ring-2 ring-purple-500/30 scale-105'
+                          ? 'bg-gradient-to-b from-[#1e233d] to-[#15192c] border-emerald-400 shadow-xl shadow-emerald-500/20 ring-2 ring-emerald-500/30 scale-105'
                           : 'bg-[#111424] border-card-border/80 opacity-80 hover:opacity-100'
                       }`}
                     >
@@ -1236,9 +1273,9 @@ export default function AgentDebate({
                         </div>
                         <div className="text-[10px] text-purple-300 font-sans truncate">{role}</div>
                         {isSpeaking ? (
-                          <div className="text-[9px] font-mono text-emerald-400 flex items-center gap-1 mt-0.5">
+                          <div className="text-[9px] font-mono text-emerald-400 flex items-center gap-1 mt-0.5 font-bold">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                            <span>Speaking...</span>
+                            <span>{isAudioSpeaking ? 'Speaking...' : 'Thinking...'}</span>
                           </div>
                         ) : (
                           <div className="text-[9px] font-mono text-gray-500 truncate mt-0.5">
@@ -1292,15 +1329,15 @@ export default function AgentDebate({
                         )}
 
                         <button
-                          onClick={() => speakText(turn.content, voiceMap[turn.agent_id] || 'en-US-JennyNeural', turn.id)}
+                          onClick={() => handlePlayTurnVoice(turn)}
                           className={`p-1.5 rounded-lg border text-xs transition-colors cursor-pointer ${
                             isTurnSpeaking
-                              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 ring-1 ring-emerald-500/40'
                               : 'bg-[#141829] text-gray-500 hover:text-cyan-300 border-card-border'
                           }`}
-                          title="Listen with Agent Neural Voice"
+                          title={isTurnSpeaking ? "Stop Speaking" : "Listen with Agent Neural Voice"}
                         >
-                          <Volume2 className="w-3 h-3" />
+                          {isTurnSpeaking ? <VolumeX className="w-3 h-3 text-emerald-400 animate-pulse" /> : <Volume2 className="w-3 h-3" />}
                         </button>
                       </div>
                     </div>
