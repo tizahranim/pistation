@@ -411,7 +411,7 @@ export default function Overview({
       title: isRTL ? 'موارد النظام' : 'System Resources',
       icon: Activity,
       desc: isRTL ? 'مقاييس العتاد ومراقبة الأداء' : 'Dual RTX 5070 & hardware metrics',
-      badge: isRTL ? `${diskFreeGb} جيجابايت متاح` : (telemetry?.disk?.free_gb != null ? `${telemetry.disk.free_gb} {isRTL ? 'جيجابايت متاح' : 'GB Free'}` : 'CUDA 13.0'),
+      badge: isRTL ? `${diskFreeGb} جيجابايت متاح` : (telemetry?.disk?.free_gb != null ? `${telemetry.disk.free_gb} GB Free` : 'CUDA 13.0'),
       color: 'teal'
     }
   ];
@@ -755,7 +755,7 @@ export default function Overview({
                           ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
                           : 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30'
                       }`}>
-                        {isUsb ? '⚡ USB Drive' : `${d.free_gb}{isRTL ? 'جيجابايت متاح' : 'GB Free'}`}
+                        {isUsb ? (isRTL ? '⚡ وحدة USB' : '⚡ USB Drive') : (isRTL ? `${d.free_gb} جيجابايت متاح` : `${d.free_gb} GB Free`)}
                       </span>
                     </div>
 
