@@ -633,9 +633,9 @@ export default function Overview({
             <div className="flex items-center justify-between border-b border-card-border pb-2 mb-2">
               <div className="flex items-center gap-2 font-mono text-xs font-bold text-gray-200 uppercase tracking-wider">
                 <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-                <span>Station Applications & Feature Shortcuts</span>
+                <span>{isRTL ? 'تطبيقات واختصارات المحطة' : 'Station Applications & Feature Shortcuts'}</span>
               </div>
-              <span className="text-[10px] font-mono text-gray-500">9 {t('overview.core_modules', 'Core Modules')}</span>
+              <span className="text-[10px] font-mono text-gray-500">{isRTL ? '٩ وحدات أساسية' : '9 Core Modules'}</span>
             </div>
 
             <div className="grid grid-cols-3 gap-2 flex-1">
@@ -675,13 +675,13 @@ export default function Overview({
             <div className="flex items-center justify-between border-b border-card-border pb-1.5">
               <div className="flex items-center gap-2 font-mono text-[11px] font-bold text-emerald-400 uppercase tracking-wider">
                 <Zap className="w-3 h-3" />
-                <span>Dual NVIDIA RTX 5070 & {t('overview.storage', 'Storage')} Hardware Matrix</span>
+                <span>{isRTL ? 'مصفوفة عتاد كروت RTX 5070 والتخزين' : 'Dual NVIDIA RTX 5070 & Storage Hardware Matrix'}</span>
               </div>
               <button
                 onClick={() => setActiveTab('resources')}
                 className="text-[10px] font-mono text-gray-400 hover:text-emerald-300 flex items-center gap-1 transition-colors cursor-pointer"
               >
-                <span>Full Telemetry</span>
+                <span>{isRTL ? 'القياسات الكاملة' : 'Full Telemetry'}</span>
                 <ArrowRight className="w-2.5 h-2.5" />
               </button>
             </div>
@@ -695,12 +695,12 @@ export default function Overview({
                     <span>GPU 0 (RTX 5070)</span>
                   </div>
                   <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-                    {telemetry?.gpus?.[0]?.temperature_c || 45}°C • Active
+                    {telemetry?.gpus?.[0]?.temperature_c || 45}°C {isRTL ? '• نشط' : '• Active'}
                   </span>
                 </div>
                 <div className="space-y-1">
                   <div className="flex items-center justify-between text-[10px] font-mono text-gray-400">
-                    <span>V{t('overview.ram_usage', 'RAM Usage')}</span>
+                    <span>{isRTL ? 'استهلاك VRAM' : 'VRAM Usage'}</span>
                     <span className="font-bold text-emerald-300">
                       {telemetry?.gpus?.[0]?.vram_used_mb ? `${telemetry.gpus[0].vram_used_mb} MiB` : '824 MiB'} / 12.2 GB
                     </span>
@@ -722,12 +722,12 @@ export default function Overview({
                     <span>GPU 1 (RTX 5070)</span>
                   </div>
                   <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-purple-500/15 text-purple-300 border border-purple-500/30">
-                    {telemetry?.gpus?.[1]?.temperature_c || 33}°C • Standby
+                    {telemetry?.gpus?.[1]?.temperature_c || 33}°C {isRTL ? '• في وضع الاستعداد' : '• Standby'}
                   </span>
                 </div>
                 <div className="space-y-1">
                   <div className="flex items-center justify-between text-[10px] font-mono text-gray-400">
-                    <span>V{t('overview.ram_usage', 'RAM Usage')}</span>
+                    <span>{isRTL ? 'استهلاك VRAM' : 'VRAM Usage'}</span>
                     <span className="font-bold text-purple-300">
                       {telemetry?.gpus?.[1]?.vram_used_mb ? `${telemetry.gpus[1].vram_used_mb} MiB` : '2 MiB'} / 12.2 GB
                     </span>
@@ -853,7 +853,7 @@ export default function Overview({
               </div>
               <div>
                 <h2 className="text-xs font-bold text-gray-100 font-mono uppercase tracking-wider">
-                  Station Planner
+                  {isRTL ? "مخطط المحطة والمهام" : "Station Planner"}
                 </h2>
                 <p className="text-[10px] text-gray-400 font-mono">
                   {isRTL ? `${completedTodosCount} من أصل ${todos.length} مكتملة` : `${completedTodosCount} of ${todos.length} completed`}
@@ -865,13 +865,13 @@ export default function Overview({
             <div className="flex items-center gap-0.5 bg-[#141829] p-0.5 rounded-lg border border-card-border text-[9px] font-mono">
               {['all', 'active', 'completed'].map(f => (
                 <button
-                  key={f}
+                  key={isRTL ? (f === 'all' ? 'الكل' : (f === 'active' ? 'النشطة' : 'المكتملة')) : f}
                   onClick={() => setTodoFilter(f)}
                   className={`px-1.5 py-0.5 rounded capitalize transition-colors cursor-pointer ${
                     todoFilter === f ? 'bg-purple-600 text-white font-bold' : 'text-gray-400 hover:text-gray-200'
                   }`}
                 >
-                  {f}
+                  {isRTL ? (f === 'all' ? 'الكل' : (f === 'active' ? 'النشطة' : 'المكتملة')) : f}
                 </button>
               ))}
             </div>
@@ -884,7 +884,7 @@ export default function Overview({
                 type="text"
                 value={newTodoText}
                 onChange={(e) => setNewTodoText(e.target.value)}
-                placeholder="Add a new task or goal..."
+                placeholder={isRTL ? "...أضف مهمة أو هدف جديد" : "Add a new task or goal..."}
                 className="flex-1 bg-[#141829] border border-card-border rounded-lg px-2.5 py-1 text-xs text-gray-100 placeholder-gray-500 focus:outline-none focus:border-purple-500/50"
               />
               <button
@@ -902,9 +902,9 @@ export default function Overview({
               <span>{t('common.priority', 'Priority')}:</span>
               <div className="flex items-center gap-1">
                 {[
-                  { id: 'high', label: '🔥 High' },
-                  { id: 'medium', label: '⚡ Med' },
-                  { id: 'low', label: '🟢 Low' }
+                  { id: 'high', label: isRTL ? '🔥 عالية' : '🔥 High' },
+                  { id: 'medium', label: isRTL ? '⚡ متوسطة' : '⚡ Med' },
+                  { id: 'low', label: isRTL ? '🟢 منخفضة' : '🟢 Low' }
                 ].map(p => (
                   <button
                     key={p.id}
@@ -925,7 +925,7 @@ export default function Overview({
           <div className="space-y-1.5 flex-1 overflow-y-auto pr-1 py-1">
             {filteredTodos.length === 0 ? (
               <div className="p-6 text-center text-xs text-gray-500 font-mono">
-                {todoFilter === 'completed' ? 'No completed tasks.' : t('overview.no_todos', 'No active tasks. Add one above!')}
+                {todoFilter === 'completed' ? (isRTL ? 'لا توجد مهام مكتملة.' : 'No completed tasks.') : (isRTL ? 'لا توجد مهام نشطة. أضف مهمة بالأعلى!' : 'No active tasks. Add one above!')}
               </div>
             ) : (
               filteredTodos.map(todo => (
